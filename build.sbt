@@ -32,7 +32,7 @@ lazy val root = project
 lazy val core = project
   .in(file("core"))
   .settings(name := "tectonic")
-  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % "3.2.0")
+  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % "3.2.1")
   .settings(commonOverrides)
   .enablePlugins(AutomateHeaderPlugin)
 

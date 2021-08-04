@@ -18,7 +18,7 @@ package tectonic
 package csv
 
 import cats.effect.IO
-import cats.effect.unsafe.IORuntime
+import cats.effect.unsafe.implicits.global
 import cats.instances.int._
 
 import _root_.fs2.Chunk
@@ -37,10 +37,6 @@ import java.util.concurrent.TimeUnit
 class ParserBenchmarks {
   val TectonicFramework = "tectonic"
   val JacksonFramework = "jackson"
-
-  // TODO: this replaces compute pool from ExecutionContext.global
-  // to the work-stealing pool. Is that ok?
-  private[this] implicit val runtime: IORuntime = IORuntime.global
 
   private[this] val ChunkSize = 65536
 

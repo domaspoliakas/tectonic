@@ -18,7 +18,7 @@ package tectonic
 package json
 
 import cats.effect.{IO, Sync}
-import cats.effect.unsafe.IORuntime
+import cats.effect.unsafe.implicits.global
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
@@ -37,10 +37,6 @@ import java.util.concurrent.TimeUnit
 @BenchmarkMode(Array(Mode.AverageTime))
 @State(Scope.Benchmark)
 class SkipBenchmarks {
-
-  // TODO: this replaces compute pool from ExecutionContext.global
-  // to the work-stealing pool. Is that ok?
-  private[this] implicit val runtime: IORuntime = IORuntime.global
 
   private[this] val ChunkSize = 65536
 
