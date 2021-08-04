@@ -18,6 +18,7 @@ package tectonic
 package json
 
 import cats.effect.{IO, Sync}
+import cats.effect.unsafe.IORuntime
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
@@ -31,7 +32,6 @@ import scala.collection.immutable.List
 
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
-import cats.effect.unsafe.IORuntime
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
