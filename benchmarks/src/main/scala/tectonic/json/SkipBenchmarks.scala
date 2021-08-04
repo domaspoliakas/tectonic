@@ -17,10 +17,10 @@
 package tectonic
 package json
 
-import cats.effect.{Blocker, ContextShift, IO, Sync}
+import cats.effect.{IO, Sync}
 
 import _root_.fs2.Chunk
-import _root_.fs2.io.file
+import _root_.fs2.io.file.Files
 
 import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit, Param, Scope, State}
 import org.openjdk.jmh.infra.Blackhole
@@ -28,25 +28,19 @@ import org.openjdk.jmh.infra.Blackhole
 import tectonic.fs2.StreamParser
 
 import scala.collection.immutable.List
-import scala.concurrent.ExecutionContext
 
 import java.nio.file.Paths
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.TimeUnit
+import cats.effect.unsafe.IORuntime
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
 @State(Scope.Benchmark)
 class SkipBenchmarks {
-  private[this] implicit val CS: ContextShift[IO] =
-    IO.contextShift(ExecutionContext.global)
 
-  private[this] val BlockingPool =
-    Blocker.liftExecutionContext(
-      ExecutionContext.fromExecutor(Executors newCachedThreadPool { r =>
-        val t = new Thread(r)
-        t.setDaemon(true)
-        t
-      }))
+  // TODO: this replaces compute pool from ExecutionContext.global
+  // to the work-stealing pool. Is that ok?
+  private[this] implicit val runtime: IORuntime = IORuntime.global
 
   private[this] val ChunkSize = 65536
 
@@ -73,9 +67,8 @@ class SkipBenchmarks {
       back <- ProjectionPlate[IO, List[Nothing]](terminal, "bar", enableSkips)
     } yield back
 
-    val contents = file.readAll[IO](
+    val contents = Files[IO].readAll(
       ResourceDir.resolve("ugh10k.json"),
-      BlockingPool,
       ChunkSize)
 
     val parser = StreamParser(Parser(plateF, Parser.UnwrapArray))(_ => Chunk.empty[Nothing])

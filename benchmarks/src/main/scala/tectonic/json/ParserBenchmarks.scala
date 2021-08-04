@@ -17,10 +17,11 @@
 package tectonic
 package json
 
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 
 import _root_.fs2.Chunk
-import _root_.fs2.io.file
+import _root_.fs2.io.file.Files
 
 import jawnfs2._
 
@@ -30,10 +31,9 @@ import org.openjdk.jmh.infra.Blackhole
 import tectonic.fs2.StreamParser
 
 import scala.collection.immutable.List
-import scala.concurrent.ExecutionContext
 
 import java.nio.file.Paths
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.TimeUnit
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -42,16 +42,9 @@ class ParserBenchmarks {
   val TectonicFramework = "tectonic"
   val JawnFramework = "jawn"
 
-  private[this] implicit val CS: ContextShift[IO] =
-    IO.contextShift(ExecutionContext.global)
-
-  private[this] val BlockingPool =
-    Blocker.liftExecutionContext(
-      ExecutionContext.fromExecutor(Executors newCachedThreadPool { r =>
-        val t = new Thread(r)
-        t.setDaemon(true)
-        t
-      }))
+  // TODO: this replaces compute pool from ExecutionContext.global
+  // to the work-stealing pool. Is that ok?
+  private[this] implicit val runtime: IORuntime = IORuntime.global
 
   private[this] val ChunkSize = 65536
 
@@ -101,9 +94,8 @@ class ParserBenchmarks {
       Jawn.TinyScalarCost,
       NumericCost)
 
-    val contents = file.readAll[IO](
+    val contents = Files[IO].readAll(
       ResourceDir.resolve(inputFile + ".json"),
-      BlockingPool,
       ChunkSize)
 
     val processed = if (framework == TectonicFramework) {

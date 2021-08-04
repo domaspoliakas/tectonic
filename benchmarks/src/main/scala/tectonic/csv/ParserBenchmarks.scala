@@ -17,20 +17,19 @@
 package tectonic
 package csv
 
-import cats.effect.{Blocker, ContextShift, IO}
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import cats.instances.int._
 
 import _root_.fs2.Chunk
-import _root_.fs2.io.file
+import _root_.fs2.io.file.Files
 
 import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit, Param, Scope, State}
 
 import tectonic.fs2.StreamParser
 
-import scala.concurrent.ExecutionContext
-
 import java.nio.file.Paths
-import java.util.concurrent.{Executors, TimeUnit}
+import java.util.concurrent.TimeUnit
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -39,16 +38,9 @@ class ParserBenchmarks {
   val TectonicFramework = "tectonic"
   val JacksonFramework = "jackson"
 
-  private[this] implicit val CS: ContextShift[IO] =
-    IO.contextShift(ExecutionContext.global)
-
-  private[this] val BlockingPool =
-    Blocker.liftExecutionContext(
-      ExecutionContext.fromExecutor(Executors newCachedThreadPool { r =>
-        val t = new Thread(r)
-        t.setDaemon(true)
-        t
-      }))
+  // TODO: this replaces compute pool from ExecutionContext.global
+  // to the work-stealing pool. Is that ok?
+  private[this] implicit val runtime: IORuntime = IORuntime.global
 
   private[this] val ChunkSize = 65536
 
@@ -98,9 +90,8 @@ class ParserBenchmarks {
       }
     }
 
-    val contents = file.readAll[IO](
+    val contents = Files[IO].readAll(
       ResourceDir.resolve(inputFile),
-      BlockingPool,
       ChunkSize)
 
     val processed = if (framework == TectonicFramework) {
@@ -120,9 +111,8 @@ class ParserBenchmarks {
   def lineCountThroughFs2(): Unit = {
     val inputFile = "worldcitiespop.txt"
 
-    val contents = file.readAll[IO](
+    val contents = Files[IO].readAll(
       ResourceDir.resolve(inputFile),
-      BlockingPool,
       ChunkSize)
 
     val counts = contents.chunks map { bytes =>

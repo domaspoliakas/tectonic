@@ -20,6 +20,7 @@ package test
 import scala._
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import org.specs2.mutable.Specification
 
 class MultiplexingPlateSpecs extends Specification {

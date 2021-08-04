@@ -18,6 +18,7 @@ package tectonic
 package test
 
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 
 import org.specs2.matcher.{Matcher, MatchersImplicits}
 
@@ -30,13 +31,13 @@ package object json {
 
   import MatchersImplicits._
 
-  def parseRowAs[A: Absorbable](expected: Event*): Matcher[A] =
+  def parseRowAs[A: Absorbable](expected: Event*)(implicit runtime: IORuntime): Matcher[A] =
     parseAs(expected :+ Event.FinishRow: _*)
 
-  def parseAs[A: Absorbable](expected: Event*): Matcher[A] =
+  def parseAs[A: Absorbable](expected: Event*)(implicit runtime: IORuntime): Matcher[A] =
     parseAsWithPlate(expected: _*)(p => p)
 
-  def parseAsWithPlate[A: Absorbable](expected: Event*)(f: Plate[List[Event]] => Plate[List[Event]]): Matcher[A] = { input: A =>
+  def parseAsWithPlate[A: Absorbable](expected: Event*)(f: Plate[List[Event]] => Plate[List[Event]])(implicit runtime: IORuntime): Matcher[A] = { input: A =>
     val resultsF = for {
       parser <- Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream)
       left <- Absorbable[A].absorb(parser, input)
@@ -62,7 +63,7 @@ package object json {
     }
   }
 
-  def failToParseWith[A: Absorbable](expected: ParseException): Matcher[A] = { input: A =>
+  def failToParseWith[A: Absorbable](expected: ParseException)(implicit runtime: IORuntime): Matcher[A] = { input: A =>
     val resultsF = for {
       parser <- Parser(ReifiedTerminalPlate[IO](), Parser.ValueStream)
       left <- Absorbable[A].absorb(parser, input)

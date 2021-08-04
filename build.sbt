@@ -11,7 +11,8 @@ scmInfo in ThisBuild := Some(ScmInfo(
   url("https://github.com/precog/tectonic"),
   "scm:git@github.com:precog/tectonic.git"))
 
-val Fs2Version = "2.5.6"
+val Fs2Version = "3.0.6"
+
 
 ThisBuild / publishAsOSSProject := true
 
@@ -31,7 +32,7 @@ lazy val root = project
 lazy val core = project
   .in(file("core"))
   .settings(name := "tectonic")
-  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % "2.5.1")
+  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % "3.2.0")
   .settings(commonOverrides)
   .enablePlugins(AutomateHeaderPlugin)
 

@@ -18,6 +18,7 @@ package tectonic
 package json
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
 
 import org.specs2.mutable.Specification
