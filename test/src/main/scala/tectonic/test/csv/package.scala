@@ -18,6 +18,7 @@ package tectonic
 package test
 
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import cats.implicits._
 
 import org.specs2.execute.Result
@@ -35,7 +36,7 @@ package object csv {
 
   import MatchersImplicits._
 
-  def parseAs(expected: Event*)(implicit config: Parser.Config): Matcher[String] = { input: String =>
+  def parseAs(expected: Event*)(implicit config: Parser.Config, runtime: IORuntime): Matcher[String] = { input: String =>
     val resultsF = for {
       parser <- Parser(ReifiedTerminalPlate[IO](), config)
       left <- parser.absorb(input)
@@ -61,7 +62,7 @@ package object csv {
     }
   }
 
-  def failParseWithError(errorPF: PartialFunction[ParseException, Result])(implicit config: Parser.Config): Matcher[String] = { input: String =>
+  def failParseWithError(errorPF: PartialFunction[ParseException, Result])(implicit config: Parser.Config, runtime: IORuntime): Matcher[String] = { input: String =>
     val resultsF = for {
       parser <- Parser(ReifiedTerminalPlate[IO](), config)
       left <- parser.absorb(input)

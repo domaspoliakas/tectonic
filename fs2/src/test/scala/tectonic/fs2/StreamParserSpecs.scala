@@ -18,6 +18,7 @@ package tectonic
 package fs2
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.instances.list._
 
 import _root_.fs2.{Chunk, Pipe, Stream}
@@ -45,20 +46,20 @@ class StreamParserSpecs extends Specification {
 
   "stream parser transduction" should {
     "parse a single value" in {
-      val results = Stream.chunk(Chunk.Bytes("42".getBytes)).through(parser)
+      val results = Stream.chunk(Chunk.array("42".getBytes)).through(parser)
       results.compile.toList.unsafeRunSync() mustEqual List(Num("42", -1, -1), FinishRow)
     }
 
     "parse two values from a single chunk" in {
-      val results = Stream.chunk(Chunk.Bytes("16 true".getBytes)).through(parser)
+      val results = Stream.chunk(Chunk.array("16 true".getBytes)).through(parser)
       val expected = List(Num("16", -1, -1), FinishRow, Tru, FinishRow)
 
       results.compile.toList.unsafeRunSync() mustEqual expected
     }
 
     "parse a value split across two chunks" in {
-      val input = Stream.chunk(Chunk.Bytes("7".getBytes)) ++
-        Stream.chunk(Chunk.Bytes("9".getBytes))
+      val input = Stream.chunk(Chunk.array("7".getBytes)) ++
+        Stream.chunk(Chunk.array("9".getBytes))
 
       val results = input.through(parser)
       val expected = List(Num("79", -1, -1), FinishRow)
@@ -67,8 +68,8 @@ class StreamParserSpecs extends Specification {
     }
 
     "parse two values from two chunks" in {
-      val input = Stream.chunk(Chunk.Bytes("321 ".getBytes)) ++
-        Stream.chunk(Chunk.Bytes("true".getBytes))
+      val input = Stream.chunk(Chunk.array("321 ".getBytes)) ++
+        Stream.chunk(Chunk.array("true".getBytes))
 
       val results = input.through(parser)
       val expected = List(Num("321", -1, -1), FinishRow, Tru, FinishRow)
@@ -86,8 +87,8 @@ class StreamParserSpecs extends Specification {
     }
 
     "parse two values from a split bytevector chunk" in {
-      val input = Stream.chunk(
-        Chunk.ByteVectorChunk(
+      val input = 
+        Stream.chunk(Chunk.byteVector(
           ByteVector.view(ByteBuffer.wrap("456 ".getBytes)) ++
             ByteVector.view(ByteBuffer.wrap("true".getBytes))))
 
@@ -99,7 +100,7 @@ class StreamParserSpecs extends Specification {
 
     // this test also tests the json parser
     "parse two values with partial batch consumption" in {
-      val input = Stream.chunk(Chunk.Bytes("[123, false]".getBytes))
+      val input = Stream.chunk(Chunk.array("[123, false]".getBytes))
 
       val plateF = ReifiedTerminalPlate[IO]() map { delegate =>
         new Plate[List[Event]] {

@@ -17,6 +17,7 @@
 package tectonic
 
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 
 import org.specs2.matcher.{BeEqualTo, Expectable, Matcher, MatchResult}
 
@@ -24,7 +25,7 @@ import scala.StringContext
 
 package object test {
 
-  def replayAs(events: Event*): Matcher[EventCursor] = {
+  def replayAs(events: Event*)(implicit runtime: IORuntime): Matcher[EventCursor] = {
     new BeEqualTo(events.toList) ^^ { ec: EventCursor =>
       val plate = ReifiedTerminalPlate[IO]().unsafeRunSync()
       ec.drive(plate)

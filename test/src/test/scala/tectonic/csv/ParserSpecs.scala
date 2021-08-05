@@ -17,6 +17,8 @@
 package tectonic
 package csv
 
+import cats.effect.unsafe.implicits.global
+
 import org.specs2.mutable.Specification
 
 import tectonic.test.Event

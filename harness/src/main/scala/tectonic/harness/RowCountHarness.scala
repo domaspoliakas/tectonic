@@ -16,23 +16,21 @@
 
 package tectonic.harness
 
-import cats.effect.{Blocker, IO, Sync}
+import cats.effect.{IO, Sync}
 import cats.instances.long._
 
-import fs2.{io, Chunk, Pipe}
+import fs2.{Chunk, Pipe}
+import fs2.io.file.Files
 
 import tectonic.{csv, json, Plate, Signal}
 import tectonic.fs2.StreamParser
 
 import scala.{Array, Boolean, Byte, Int, Long, Unit}
-import scala.concurrent.ExecutionContext
 
 import java.lang.{CharSequence, SuppressWarnings}
 import java.nio.file.Path
 
 object RowCountHarness {
-
-  private implicit val CS = IO.contextShift(ExecutionContext.global)
 
   def jsonParser(mode: json.Parser.Mode): Pipe[IO, Byte, Long] =
     StreamParser(json.Parser(RowCountPlate[IO], mode))(Chunk.singleton(_))
@@ -41,19 +39,19 @@ object RowCountHarness {
     StreamParser(csv.Parser(RowCountPlate[IO], config))(Chunk.singleton(_))
 
   def rowCountJson(file: Path, mode: json.Parser.Mode): IO[Long] = {
-    Blocker[IO].use(io.file.readAll[IO](file, _, 16384)
+    Files[IO].readAll(file, 16384)
       .through(jsonParser(mode))
       .foldMonoid
       .compile.last
-      .map(_.getOrElse(0L)))
+      .map(_.getOrElse(0L))
   }
 
   def rowCountCsv(file: Path, config: csv.Parser.Config): IO[Long] = {
-    Blocker[IO].use(io.file.readAll[IO](file, _, 16384)
+    Files[IO].readAll(file, 16384)
       .through(csvParser(config))
       .foldMonoid
       .compile.last
-      .map(_.getOrElse(0L)))
+      .map(_.getOrElse(0L))
   }
 
   object RowCountPlate {
