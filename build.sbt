@@ -1,7 +1,6 @@
 import scala.collection.Seq
 
-ThisBuild / crossScalaVersions := Seq("2.12.12", "2.13.1")
-ThisBuild / scalaVersion := "2.12.12"
+ThisBuild / scalaVersion := "2.13.6"
 
 ThisBuild / githubRepository := "tectonic"
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Precog Data
+ * Copyright 2021 Precog Data
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -143,7 +143,7 @@ class MultiplexingPlateSpecs extends Specification {
 
         val plate = MultiplexingPlate[List[Event]](reified, mutant)
 
-        plate.unnest
+        plate.unnest()
         mutant.mutant mustEqual "unnest"
         plate.finishBatch(true) mustEqual List(Event.Unnest)
       }

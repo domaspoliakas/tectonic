@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Precog Data
+ * Copyright 2021 Precog Data
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,7 +176,7 @@ abstract class BaseParser[F[_], A] {
   protected[this] final def die(i: Int, msg: String): Nothing = {
     val y = line + 1
     val x = column(i) + 1
-    val s = "%s got %s (line %d, column %d)" format (msg, at(i), y, x)
+    val s = "%s got %s (line %d, column %d)".format(msg, at(i), y, x)
     throw ParseException(s, i, y, x)
   }
 
