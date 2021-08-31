@@ -1,4 +1,4 @@
-# Tectonic [![Build Status](https://travis-ci.org/slamdata/tectonic.svg?branch=master)](https://travis-ci.org/slamdata/tectonic) [![Bintray](https://img.shields.io/bintray/v/slamdata-inc/maven-public/tectonic.svg)](https://bintray.com/slamdata-inc/maven-public/tectonic) [![Discord](https://img.shields.io/discord/373302030460125185.svg?logo=discord)](https://discord.gg/QNjwCg6)
+# Tectonic [![Discord](https://img.shields.io/discord/373302030460125185.svg?logo=discord)](https://discord.gg/QNjwCg6)
 
 A columnar fork of [Jawn](https://github.com/non/Jawn) with added backend support for CSV. The distinction between "columnar" and its asymmetric opposite, "row-oriented", is in the orientation of data structures which you are expected to create in response to the event stream. Jawn expects a single, self-contained value with internal recursive structure per row, and its `Facade` trait is designed around this idea. Tectonic expects many rows to be combined into a much larger batch with a flat internal structure, and the `Plate` class is designed around this idea.
 
@@ -13,10 +13,10 @@ Tectonic is very likely the optimal JSON parser on the JVM for producing columna
 ## Usage
 
 ```sbt
-libraryDependencies += "com.slamdata" %% "tectonic" % <version>
+libraryDependencies += "com.precog" %% "tectonic" % <version>
 
 // if you wish to use Tectonic with fs2 (recommended)
-libraryDependencies += "com.slamdata" %% "tectonic-fs2" % <version>
+libraryDependencies += "com.precog" %% "tectonic-fs2" % <version>
 ```
 
 If using Tectonic via fs2, you can take advantage of the `StreamParser` `Pipe` to perform all of the heavy lifting:
@@ -227,7 +227,7 @@ object FacadeTuningParams {
 - Numerics are special, since we assume realistic facades will be performing numerical parsing to ensure maximally efficient representations. Thus, both facades check for decimal and exponent. If these are lacking, then the cost paid is the `ScalarCost`. If these are present, then the cost paid is `NumericCost`, simulating a trip through `BigDecimal`.
 - `Add` and `Final` costs for Jawn are referring to the `Context` functions, which are generally implemented with growable, associative data structures set to small sizes
 
-Broadly, these costs were strongly inspired by the internal data structures of [the Mimir database engine](https://github.com/slamdata/quasar) and [the QData representation](https://github.com/slamdata/qdata). In the direct comparison measurements, `Signal.Continue` is universally assumed as the result from `Plate`, voiding any advantages Tectonic can derive from projection/predicate pushdown.
+Broadly, these costs were strongly inspired by the internal data structures of [the Mimir database engine](https://github.com/precog/quasar) and [the QData representation](https://github.com/precog/qdata). In the direct comparison measurements, `Signal.Continue` is universally assumed as the result from `Plate`, voiding any advantages Tectonic can derive from projection/predicate pushdown.
 
 Both frameworks are benchmarked *through* [fs2](https://fs2.io) (in the case of Jawn, using [jawn-fs2](https://github.com/http4s/jawn-fs2)), which is assumed to be the mode in which both parsers will be run. This allows the benchmarks to capture nuances such as `ByteVectorChunk` handling, `ByteBuffer` unpacking and such.
 
@@ -286,4 +286,4 @@ The line count test really just serves as a lower-bound on how long it takes fs2
 
 ## License
 
-To the extent that lines of code have been copied from the Jawn codebase, they retain their original copyright and license, which is [The MIT License](https://opensource.org/licenses/MIT). Original code which is unique to Tectonic is licensed under [The Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), copyright [SlamData](https://slamdata.com). Files which are substantially drawn from Jawn retain *both* copyright headers, as well as a special thank-you to the Jawn contributors.
+To the extent that lines of code have been copied from the Jawn codebase, they retain their original copyright and license, which is [The MIT License](https://opensource.org/licenses/MIT). Original code which is unique to Tectonic is licensed under [The Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), copyright [Precog Data](https://precog.com). Files which are substantially drawn from Jawn retain *both* copyright headers, as well as a special thank-you to the Jawn contributors.
