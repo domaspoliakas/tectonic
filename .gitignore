@@ -4,7 +4,7 @@ tags
 *.swp
 *.swo
 
-# sbt-slamdata common resources
+# sbt-precog common resources
 /scripts/checkAndAutoMerge
 /scripts/commonSetup
 /scripts/discordTravisPost
@@ -16,3 +16,5 @@ tags
 /pubring.pgp.enc
 /scripts/readVersion
 /secring.pgp.enc
+.scalafmt-common.conf
+.scalafmt.conf
