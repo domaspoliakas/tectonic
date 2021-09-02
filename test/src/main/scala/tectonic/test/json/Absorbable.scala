@@ -17,12 +17,12 @@
 package tectonic
 package test
 
-import cats.effect.IO
-
 import java.lang.String
 import java.nio.ByteBuffer
+import scala.Array
+import scala.Byte
 
-import scala.{Array, Byte}
+import cats.effect.IO
 
 sealed trait Absorbable[A] {
   def absorb[B](p: BaseParser[IO, B], a: A): IO[ParseResult[B]]

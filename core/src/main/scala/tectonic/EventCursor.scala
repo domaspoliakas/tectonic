@@ -16,13 +16,14 @@
 
 package tectonic
 
-import cats.instances.int._
-import cats.syntax.eq._
-
-import scala._, Predef._
+import java.lang.AssertionError
+import java.lang.CharSequence
+import scala._
 import scala.annotation.switch
 
-import java.lang.{AssertionError, CharSequence}
+import Predef._
+import cats.instances.int._
+import cats.syntax.eq._
 
 final class EventCursor private (
     tagBuffer: Array[Long],
@@ -72,14 +73,15 @@ final class EventCursor private (
   /**
    * Originally returned: (TODO remove this documentation)
    *
-   * - `0` ==> NextRow
-   * - `1` ==> NextBatch
-   * - `2` ==> NextRowAndBatch
+   *   - `0` ==> NextRow
+   *   - `1` ==> NextBatch
+   *   - `2` ==> NextRowAndBatch
    */
   // TODO skips
   def nextRow(plate: Plate[_]): EventCursor.NextRowStatus = {
     var continue = true
-    var hasNext = this.hasNext()    // we use a var rather than relying on the def so that we can *set* it to be false on end of batch
+    var hasNext =
+      this.hasNext() // we use a var rather than relying on the def so that we can *set* it to be false on end of batch
 
     while (continue && hasNext) {
       // we can't use @switch if we use vals here :-(
@@ -94,22 +96,22 @@ final class EventCursor private (
         case 0x7 => plate.nestMap(nextStr())
         case 0x8 => plate.nestArr()
         case 0x9 => plate.nestMeta(nextStr())
-        case 0xA => plate.unnest()
+        case 0xa => plate.unnest()
 
-        case 0xB =>
+        case 0xb =>
           continue = false
 
           // if we hit a row boundary, look ahead to see if we're also at a batch boundary
-          if (this.hasNext() && currentTag() == 0xD) {
+          if (this.hasNext() && currentTag() == 0xd) {
             // if we're at the batch boundary, advance over it
             nextTag()
             hasNext = false
           }
 
-        case 0xC => plate.skipped(nextInt())
+        case 0xc => plate.skipped(nextInt())
 
         // we define end-of-batch to be analogous to end-of-stream
-        case 0xD => hasNext = false
+        case 0xd => hasNext = false
 
         case tag => sys.error(s"assertion failed: unrecognized tag = ${tag.toHexString}")
       }
@@ -128,10 +130,9 @@ final class EventCursor private (
   }
 
   /**
-   * Sets the current batch window to start wherever the cursor is
-   * currently pointing. Does not advance the cursor. Returns true if
-   * there actually *is* a batch here (even if the batch is empty),
-   * returns false if at EOF.
+   * Sets the current batch window to start wherever the cursor is currently pointing. Does not
+   * advance the cursor. Returns true if there actually *is* a batch here (even if the batch is
+   * empty), returns false if at EOF.
    */
   def establishBatch(): Boolean = {
     if (hasNext()) {
@@ -155,8 +156,7 @@ final class EventCursor private (
     (tagLimit * (64 / 4) + (tagSubShiftLimit / 4)) - (tagOffset * (64 / 4) + (tagSubShiftOffset / 4))
 
   /**
-   * Marks the cursor location for subsequent rewinding. Overwrites any previous
-   * mark.
+   * Marks the cursor location for subsequent rewinding. Overwrites any previous mark.
    */
   def mark(): Unit = {
     tagCursorMark = tagCursor
@@ -166,9 +166,8 @@ final class EventCursor private (
   }
 
   /**
-   * Rewinds the cursor location to the last mark. If no mark has been set,
-   * it resets to the beginning of the stream. Returns the number of events
-   * rewound.
+   * Rewinds the cursor location to the last mark. If no mark has been set, it resets to the
+   * beginning of the stream. Returns the number of events rewound.
    */
   def rewind(): Int = {
     val tagCursorDistance = tagCursor - tagCursorMark
@@ -186,7 +185,7 @@ final class EventCursor private (
     !(tagCursor == tagLimit && tagSubShiftCursor == tagSubShiftLimit)
 
   private[this] final def currentTag(): Int =
-    ((tagBuffer(tagCursor) >>> tagSubShiftCursor) & 0xF).toInt
+    ((tagBuffer(tagCursor) >>> tagSubShiftCursor) & 0xf).toInt
 
   private[this] final def nextTag(): Int = {
     val back = currentTag()
@@ -255,7 +254,8 @@ final class EventCursor private (
       val head = projectedTags(0) // >>> tagSubShiftOffset
       val tail = projectedTags.tail
 
-      val headStr = padTo(head.toHexString.toUpperCase, 16 /*- (tagSubShiftOffset / 4)*/).reverse
+      val headStr =
+        padTo(head.toHexString.toUpperCase, 16 /*- (tagSubShiftOffset / 4)*/ ).reverse
       val tailStr = tail.map(_.toHexString.toUpperCase).map(padTo(_, 16).reverse).mkString
 
       s"EventCursor(tags = ${headStr + tailStr}, tagLimit = $tagLimit, tagSubShiftLimit = $tagSubShiftLimit, tagOffset = $tagOffset, tagSubShiftOffset = $tagSubShiftOffset)"
@@ -274,10 +274,10 @@ object EventCursor {
   private[tectonic] val NestMap = 0x7
   private[tectonic] val NestArr = 0x8
   private[tectonic] val NestMeta = 0x9
-  private[tectonic] val Unnest = 0xA
-  private[tectonic] val FinishRow = 0xB
-  private[tectonic] val Skipped = 0xC
-  private[tectonic] val EndBatch = 0xD    // special columnar boundary terminator
+  private[tectonic] val Unnest = 0xa
+  private[tectonic] val FinishRow = 0xb
+  private[tectonic] val Skipped = 0xc
+  private[tectonic] val EndBatch = 0xd // special columnar boundary terminator
 
   private[tectonic] def apply(
       tagBuffer: Array[Long],
@@ -286,8 +286,7 @@ object EventCursor {
       strsBuffer: Array[CharSequence],
       strsLimit: Int,
       intsBuffer: Array[Int],
-      intsLimit: Int)
-      : EventCursor =
+      intsLimit: Int): EventCursor =
     new EventCursor(
       tagBuffer = tagBuffer,
       tagOffset = 0,

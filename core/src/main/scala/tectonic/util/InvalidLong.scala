@@ -16,12 +16,14 @@
 
 package tectonic.util
 
+import java.lang.NumberFormatException
+import java.lang.String
 import scala.StringContext
 import scala.util.control
 
-import java.lang.{NumberFormatException, String}
-
-final class InvalidLong(s: String) extends NumberFormatException(s"For input string '$s'") with control.NoStackTrace
+final class InvalidLong(s: String)
+    extends NumberFormatException(s"For input string '$s'")
+    with control.NoStackTrace
 
 object InvalidLong {
   def apply(s: String): InvalidLong = new InvalidLong(s)

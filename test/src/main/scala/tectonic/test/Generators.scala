@@ -17,12 +17,21 @@
 package tectonic
 package test
 
-import org.scalacheck.{Arbitrary, Gen}
-
-import scala.{AnyVal, Array, Boolean, Char, Int, List, Nil, Predef, Unit}, Predef._
+import java.lang.SuppressWarnings
+import scala.AnyVal
+import scala.Array
+import scala.Boolean
+import scala.Char
+import scala.Int
+import scala.List
+import scala.Nil
+import scala.Predef
+import scala.Unit
 import scala.language.postfixOps
 
-import java.lang.SuppressWarnings
+import Predef._
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 
 object Generators {
   import Arbitrary.arbitrary
@@ -53,9 +62,8 @@ object Generators {
 
   @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
   def genPlate[A]: GenF[A] = {
-    val genSubPlate = Gen.frequency(
-      20000 -> genRow[A] *>> genFinishRow[A],
-      1 -> genFinishBatch[A])
+    val genSubPlate =
+      Gen.frequency(20000 -> genRow[A] *>> genFinishRow[A], 1 -> genFinishBatch[A])
 
     for {
       gfs <- Gen.containerOf[List, Plate[A] => Unit](genSubPlate)
@@ -79,7 +87,8 @@ object Generators {
       5 -> Gen.delay(genNestMap[A] *>> genRow[A] *>> genUnnest[A]),
       5 -> Gen.delay(genNestArr[A] *>> genRow[A] *>> genUnnest[A]),
       1 -> Gen.delay(genNestMeta[A] *>> genRow[A] *>> genUnnest[A]),
-      1 -> genSkipped[A])
+      1 -> genSkipped[A]
+    )
 
   def genFinishRow[A]: GenF[A] =
     Gen.const(p => p.finishRow())
@@ -104,7 +113,6 @@ object Generators {
       ()
     }
   }
-
 
   def genTru[A]: GenF[A] = {
     Gen const { p =>
@@ -139,16 +147,18 @@ object Generators {
       integer <- genNumberStr
 
       hasDecimal <- arbitrary[Boolean]
-      decimal <- if (hasDecimal)
-        genNumberStr.map("." +)
-      else
-        Gen.const("")
+      decimal <-
+        if (hasDecimal)
+          genNumberStr.map("." +)
+        else
+          Gen.const("")
 
       hasExponent <- arbitrary[Boolean]
-      exponent <- if (hasExponent)
-        genNumberStr.map("e" +)
-      else
-        Gen.const("")
+      exponent <-
+        if (hasExponent)
+          genNumberStr.map("e" +)
+        else
+          Gen.const("")
 
       str = (if (negative) "-" else "") + integer + decimal + exponent
     } yield { p =>
@@ -158,20 +168,22 @@ object Generators {
   }
 
   def genStr[A]: GenF[A] = {
-    arbitrary[String] map { s =>
-      { p =>
-        val _ = p.str(s)
-        ()
-      }
+    arbitrary[String] map {
+      s =>
+        { p =>
+          val _ = p.str(s)
+          ()
+        }
     }
   }
 
   def genNestMap[A]: GenF[A] = {
-    arbitrary[String] map { s =>
-      { p =>
-        val _ = p.nestMap(s)
-        ()
-      }
+    arbitrary[String] map {
+      s =>
+        { p =>
+          val _ = p.nestMap(s)
+          ()
+        }
     }
   }
 
@@ -183,11 +195,12 @@ object Generators {
   }
 
   def genNestMeta[A]: GenF[A] = {
-    arbitrary[String] map { s =>
-      { p =>
-        val _ = p.nestMeta(s)
-        ()
-      }
+    arbitrary[String] map {
+      s =>
+        { p =>
+          val _ = p.nestMeta(s)
+          ()
+        }
     }
   }
 
@@ -199,11 +212,12 @@ object Generators {
   }
 
   def genSkipped[A]: GenF[A] = {
-    Gen.posNum[Int].filter(_ > 0) map { i =>
-      { p =>
-        val _ = p.skipped(i)
-        ()
-      }
+    Gen.posNum[Int].filter(_ > 0) map {
+      i =>
+        { p =>
+          val _ = p.skipped(i)
+          ()
+        }
     }
   }
 

@@ -17,19 +17,22 @@
 package tectonic
 package csv
 
-import cats.effect.IO
-import cats.effect.unsafe.implicits.global
-import cats.instances.int._
+import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
-
-import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit, Param, Scope, State}
-
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
+import cats.instances.int._
+import org.openjdk.jmh.annotations.Benchmark
+import org.openjdk.jmh.annotations.BenchmarkMode
+import org.openjdk.jmh.annotations.Mode
+import org.openjdk.jmh.annotations.OutputTimeUnit
+import org.openjdk.jmh.annotations.Param
+import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.State
 import tectonic.fs2.StreamParser
-
-import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -45,7 +48,7 @@ class ParserBenchmarks {
 
   // params
 
-  @Param(Array("tectonic"/*, "jackson"*/))
+  @Param(Array("tectonic" /*, "jackson"*/ ))
   var framework: String = _
 
   // benchmarks
@@ -86,14 +89,13 @@ class ParserBenchmarks {
       }
     }
 
-    val contents = Files[IO].readAll(
-      ResourceDir.resolve(inputFile),
-      ChunkSize)
+    val contents = Files[IO].readAll(ResourceDir.resolve(inputFile), ChunkSize)
 
     val processed = if (framework == TectonicFramework) {
       val parser =
         StreamParser[IO, Int, Int](
-          Parser(countingPlate, Parser.Config().copy(row1 = '\n', row2 = 0)))(Chunk.singleton(_))
+          Parser(countingPlate, Parser.Config().copy(row1 = '\n', row2 = 0)))(
+          Chunk.singleton(_))
 
       contents.through(parser).foldMonoid
     } else {
@@ -107,9 +109,7 @@ class ParserBenchmarks {
   def lineCountThroughFs2(): Unit = {
     val inputFile = "worldcitiespop.txt"
 
-    val contents = Files[IO].readAll(
-      ResourceDir.resolve(inputFile),
-      ChunkSize)
+    val contents = Files[IO].readAll(ResourceDir.resolve(inputFile), ChunkSize)
 
     val counts = contents.chunks map { bytes =>
       val buf = bytes.toByteBuffer

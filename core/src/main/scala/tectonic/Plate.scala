@@ -16,9 +16,10 @@
 
 package tectonic
 
-import scala.{Boolean, Int, Unit}
-
 import java.lang.CharSequence
+import scala.Boolean
+import scala.Int
+import scala.Unit
 
 abstract class Plate[A] { self =>
   def nul(): Signal

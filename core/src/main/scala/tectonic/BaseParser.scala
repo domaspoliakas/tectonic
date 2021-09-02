@@ -42,15 +42,23 @@ package tectonic
  * kDEALINGS IN THE SOFTWARE.
  */
 
-import cats.effect.Sync
-
-import scala.{sys, Array, Boolean, Byte, Char, Int, Nothing, Unit}
-import scala.Predef._
-
-import java.lang.{CharSequence, String, System}
+import java.lang.CharSequence
 import java.lang.Math.max
+import java.lang.String
+import java.lang.System
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import scala.Array
+import scala.Boolean
+import scala.Byte
+import scala.Char
+import scala.Int
+import scala.Nothing
+import scala.Predef._
+import scala.Unit
+import scala.sys
+
+import cats.effect.Sync
 
 abstract class BaseParser[F[_], A] {
 
@@ -125,8 +133,7 @@ abstract class BaseParser[F[_], A] {
   protected[tectonic] final def unsafeLen(): Int = len
 
   /**
-   * This is a specialized accessor for the case where our underlying data are
-   * bytes not chars.
+   * This is a specialized accessor for the case where our underlying data are bytes not chars.
    */
   protected[this] final def byte(i: Int): Byte =
     if (i >= len) throw AsyncException else data(i)
@@ -138,9 +145,8 @@ abstract class BaseParser[F[_], A] {
   /**
    * Access a byte range as a string.
    *
-   * Since the underlying data are UTF-8 encoded, i and k must occur on unicode
-   * boundaries. Also, the resulting String is not guaranteed to have length
-   * (k - i).
+   * Since the underlying data are UTF-8 encoded, i and k must occur on unicode boundaries.
+   * Also, the resulting String is not guaranteed to have length (k - i).
    */
   protected[this] final def at(i: Int, k: Int): CharSequence = {
     if (k > len) throw AsyncException
@@ -183,9 +189,8 @@ abstract class BaseParser[F[_], A] {
   /**
    * Used to generate messages for internal errors.
    *
-   * This should only be used in situations where a possible bug in
-   * the parser was detected. For errors in user-provided JSON, use
-   * die().
+   * This should only be used in situations where a possible bug in the parser was detected. For
+   * errors in user-provided JSON, use die().
    */
   protected[this] final def error(msg: String) =
     sys.error(msg)

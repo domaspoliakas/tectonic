@@ -17,8 +17,9 @@
 package tectonic
 
 import java.lang.CharSequence
-
-import scala.{Boolean, Int, Unit}
+import scala.Boolean
+import scala.Int
+import scala.Unit
 
 abstract class DelegatingPlate[A](val delegate: Plate[A]) extends Plate[A] {
 

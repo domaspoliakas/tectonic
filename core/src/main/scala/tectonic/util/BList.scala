@@ -17,7 +17,9 @@
 package tectonic
 package util
 
-import scala.{Boolean, Product, Serializable}
+import scala.Boolean
+import scala.Product
+import scala.Serializable
 
 private[tectonic] sealed abstract class BList extends Product with Serializable {
   def head: Boolean

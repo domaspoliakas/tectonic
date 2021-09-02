@@ -43,54 +43,54 @@ package json
  * kDEALINGS IN THE SOFTWARE.
  */
 
+import java.lang.CharSequence
+import java.lang.IndexOutOfBoundsException
+import scala.Array
+import scala.Boolean
+import scala.Char
+import scala.Int
+import scala.Long
+import scala.StringContext
+import scala.Unit
+// import scala._, Predef._
+import scala.annotation.switch
+import scala.annotation.tailrec
+import scala.inline
+
 import cats.effect.Sync
 import cats.syntax.all._
-
-import tectonic.util.{BList, CharBuilder}
-
-import scala.{inline, Array, Boolean, Char, Int, Long, StringContext, Unit}
-// import scala._, Predef._
-import scala.annotation.{switch, tailrec}
-
-import java.lang.{CharSequence, IndexOutOfBoundsException}
+import tectonic.util.BList
+import tectonic.util.CharBuilder
 
 /**
- * Parser is able to parse chunks of data (encoded as
- * Option[ByteBuffer] instances) and parse asynchronously. You can
- * use the factory methods in the companion object to instantiate an
+ * Parser is able to parse chunks of data (encoded as Option[ByteBuffer] instances) and parse
+ * asynchronously. You can use the factory methods in the companion object to instantiate an
  * async parser.
  *
  * The async parser's fields are described below:
  *
- * The (state, curr, stack) triple is used to save and restore parser
- * state between async calls. State also helps encode extra
- * information when streaming or unwrapping an array.
+ * The (state, curr, stack) triple is used to save and restore parser state between async calls.
+ * State also helps encode extra information when streaming or unwrapping an array.
  *
- * The (data, len, allocated) triple is used to manage the underlying
- * data the parser is keeping track of. As new data comes in, data may
- * be expanded if not enough space is available.
+ * The (data, len, allocated) triple is used to manage the underlying data the parser is keeping
+ * track of. As new data comes in, data may be expanded if not enough space is available.
  *
- * The offset parameter is used to drive the outer async parsing. It
- * stores similar information to curr but is kept separate to avoid
- * "corrupting" our snapshot.
+ * The offset parameter is used to drive the outer async parsing. It stores similar information
+ * to curr but is kept separate to avoid "corrupting" our snapshot.
  *
- * The done parameter is used internally to help figure out when the
- * atEof() parser method should return true. This will be set when
- * apply(None) is called.
+ * The done parameter is used internally to help figure out when the atEof() parser method
+ * should return true. This will be set when apply(None) is called.
  *
- * The streamMode parameter controls how the asynchronous parser will
- * be handling multiple values. There are three states:
+ * The streamMode parameter controls how the asynchronous parser will be handling multiple
+ * values. There are three states:
  *
- *    1: An array is being unwrapped. Normal JSON array rules apply
- *       (Note that if the outer value observed is not an array, this
- *       mode will toggle to the -1 mode).
+ * 1: An array is being unwrapped. Normal JSON array rules apply (Note that if the outer value
+ * observed is not an array, this mode will toggle to the -1 mode).
  *
- *    0: A stream of individual JSON elements separated by whitespace
- *       are being parsed. We can return each complete element as we
- *       parse it.
+ * 0: A stream of individual JSON elements separated by whitespace are being parsed. We can
+ * return each complete element as we parse it.
  *
- *   -1: No streaming is occuring. Only a single JSON value is
- *       allowed.
+ * -1: No streaming is occuring. Only a single JSON value is allowed.
  */
 final class Parser[F[_], A] private (
     plate: Plate[A],
@@ -106,26 +106,24 @@ final class Parser[F[_], A] private (
   private[this] var abbreviate: Boolean = false
 
   /**
-   * Explanation of the new synthetic states. The parser machinery
-   * uses positive integers for states while parsing json values. We
-   * use these negative states to keep track of the async parser's
-   * status between json values.
+   * Explanation of the new synthetic states. The parser machinery uses positive integers for
+   * states while parsing json values. We use these negative states to keep track of the async
+   * parser's status between json values.
    *
-   * ASYNC_PRESTART: We haven't seen any non-whitespace yet. We
-   * could be parsing an array, or not. We are waiting for valid
-   * JSON.
+   * ASYNC_PRESTART: We haven't seen any non-whitespace yet. We could be parsing an array, or
+   * not. We are waiting for valid JSON.
    *
-   * ASYNC_START: We've seen an array and have begun unwrapping
-   * it. We could see a ] if the array is empty, or valid JSON.
+   * ASYNC_START: We've seen an array and have begun unwrapping it. We could see a ] if the
+   * array is empty, or valid JSON.
    *
-   * ASYNC_END: We've parsed an array and seen the final ]. At this
-   * point we should only see whitespace or an EOF.
+   * ASYNC_END: We've parsed an array and seen the final ]. At this point we should only see
+   * whitespace or an EOF.
    *
-   * ASYNC_POSTVAL: We just parsed a value from inside the array. We
-   * expect to see whitespace, a comma, or a ].
+   * ASYNC_POSTVAL: We just parsed a value from inside the array. We expect to see whitespace, a
+   * comma, or a ].
    *
-   * ASYNC_PREVAL: We are in an array and we just saw a comma. We
-   * expect to see whitespace or a JSON value.
+   * ASYNC_PREVAL: We are in an array and we just saw a comma. We expect to see whitespace or a
+   * JSON value.
    */
   @inline private[this] final val ASYNC_PRESTART = -5
   @inline private[this] final val ASYNC_START = -4
@@ -242,14 +240,21 @@ final class Parser[F[_], A] private (
         } else {
           // jump straight back into rparse
           offset = reset(offset)
-          curr = reset(curr)    // we reset both of these, because offset only gets updated when the "row" finishes
+          curr = reset(
+            curr
+          ) // we reset both of these, because offset only gets updated when the "row" finishes
 
           val j = if (state <= 0) {
             parse(offset)
           } else if (state >= 8) {
             val curr2 = rskip(state, curr)
             plate.skipped(curr2 - curr)
-            rparse(if (enclosure(ring, roffset, fallback)) OBJEND else ARREND, curr2, ring, roffset, fallback)
+            rparse(
+              if (enclosure(ring, roffset, fallback)) OBJEND else ARREND,
+              curr2,
+              ring,
+              roffset,
+              fallback)
           } else {
             rparse(state, curr, ring, roffset, fallback)
           }
@@ -270,7 +275,8 @@ final class Parser[F[_], A] private (
       case AsyncException =>
         if (done) {
           // if we are done, make sure we ended at a good stopping point
-          if (state == ASYNC_PREVAL || state == ASYNC_END) ParseResult.Complete(plate.finishBatch(true))
+          if (state == ASYNC_PREVAL || state == ASYNC_END)
+            ParseResult.Complete(plate.finishBatch(true))
           else ParseResult.Failure(ParseException("exhausted input", -1, -1, -1))
         } else {
           // we ran out of data, so return what we have so far
@@ -288,15 +294,18 @@ final class Parser[F[_], A] private (
   }
 
   /**
-   * We use this to keep track of the last recoverable place we've
-   * seen. If we hit an AsyncException, we can later resume from this
-   * point.
+   * We use this to keep track of the last recoverable place we've seen. If we hit an
+   * AsyncException, we can later resume from this point.
    *
-   * This method is called during every loop of rparse, and the
-   * arguments are the exact arguments we can pass to rparse to
-   * continue where we left off.
+   * This method is called during every loop of rparse, and the arguments are the exact
+   * arguments we can pass to rparse to continue where we left off.
    */
-  protected[this] def checkpoint(state: Int, i: Int, ring: Long, offset: Int, fallback: BList): Unit = {
+  protected[this] def checkpoint(
+      state: Int,
+      i: Int,
+      ring: Long,
+      offset: Int,
+      fallback: BList): Unit = {
     this.state = state
     this.curr = i
     this.ring = ring
@@ -305,7 +314,7 @@ final class Parser[F[_], A] private (
 
     if (abbreviate) {
       abbreviate = false
-      throw PartialBatchException   // we've fully checkpointed, so it's safe to just bounce out
+      throw PartialBatchException // we've fully checkpointed, so it's safe to just bounce out
     }
   }
 
@@ -320,11 +329,9 @@ final class Parser[F[_], A] private (
   /**
    * Parse the given number, and add it to the given context.
    *
-   * We don't actually instantiate a number here, but rather pass the
-   * string of for future use. Facades can choose to be lazy and just
-   * store the string. This ends up being way faster and has the nice
-   * side-effect that we know exactly how the user represented the
-   * number.
+   * We don't actually instantiate a number here, but rather pass the string of for future use.
+   * Facades can choose to be lazy and just store the string. This ends up being way faster and
+   * has the nice side-effect that we know exactly how the user represented the number.
    */
   protected[this] def parseNum(i: Int): Int = {
     var j = i
@@ -378,14 +385,13 @@ final class Parser[F[_], A] private (
   /**
    * Parse the given number, and add it to the given context.
    *
-   * This method is a bit slower than parseNum() because it has to be
-   * sure it doesn't run off the end of the input.
+   * This method is a bit slower than parseNum() because it has to be sure it doesn't run off
+   * the end of the input.
    *
-   * Normally (when operating in rparse in the context of an outer
-   * array or object) we don't need to worry about this and can just
-   * grab characters, because if we run out of characters that would
-   * indicate bad input. This is for cases where the number could
-   * possibly be followed by a valid EOF.
+   * Normally (when operating in rparse in the context of an outer array or object) we don't
+   * need to worry about this and can just grab characters, because if we run out of characters
+   * that would indicate bad input. This is for cases where the number could possibly be
+   * followed by a valid EOF.
    *
    * This method has all the same caveats as the previous method.
    */
@@ -469,8 +475,8 @@ final class Parser[F[_], A] private (
   /**
    * Generate a Char from the hex digits of "\u1234" (i.e. "1234").
    *
-   * NOTE: This is only capable of generating characters from the basic plane.
-   * This is why it can only return Char instead of Int.
+   * NOTE: This is only capable of generating characters from the basic plane. This is why it
+   * can only return Char instead of Int.
    */
   protected[this] def descape(s: CharSequence): Char = {
     val hc = HexChars
@@ -484,11 +490,11 @@ final class Parser[F[_], A] private (
   }
 
   /**
-   * See if the string has any escape sequences. If not, return the end of the
-   * string. If so, bail out and return -1.
+   * See if the string has any escape sequences. If not, return the end of the string. If so,
+   * bail out and return -1.
    *
-   * This method expects the data to be in UTF-8 and accesses it as bytes. Thus
-   * we can just ignore any bytes with the highest bit set.
+   * This method expects the data to be in UTF-8 and accesses it as bytes. Thus we can just
+   * ignore any bytes with the highest bit set.
    */
   protected[this] def parseStringSimple(i: Int): Int = {
     var j = i
@@ -503,8 +509,8 @@ final class Parser[F[_], A] private (
   }
 
   /**
-   * Parse the JSON string starting at 'i' and save it into the plate.
-   * If key is true, save the string with 'nestMap', otherwise use 'str'.
+   * Parse the JSON string starting at 'i' and save it into the plate. If key is true, save the
+   * string with 'nestMap', otherwise use 'str'.
    */
   protected[this] def parseString(i: Int, key: Boolean): Boolean = {
     val k = parseStringSimple(i + 1)
@@ -663,19 +669,21 @@ final class Parser[F[_], A] private (
   /**
    * Tail-recursive parsing method to do the bulk of JSON parsing.
    *
-   * This single method manages parser states, data, etc. Except for
-   * parsing non-recursive values (like strings, numbers, and
-   * constants) all important work happens in this loop (or in methods
-   * it calls, like reset()).
+   * This single method manages parser states, data, etc. Except for parsing non-recursive
+   * values (like strings, numbers, and constants) all important work happens in this loop (or
+   * in methods it calls, like reset()).
    *
-   * Currently the code is optimized to make use of switch
-   * statements. Future work should consider whether this is better or
-   * worse than manually constructed if/else statements or something
-   * else. Also, it may be possible to reorder some cases for speed
-   * improvements.
+   * Currently the code is optimized to make use of switch statements. Future work should
+   * consider whether this is better or worse than manually constructed if/else statements or
+   * something else. Also, it may be possible to reorder some cases for speed improvements.
    */
   @tailrec
-  protected[this] def rparse(state: Int, j: Int, ring: Long, offset: Int, fallback: BList): Int = {
+  protected[this] def rparse(
+      state: Int,
+      j: Int,
+      ring: Long,
+      offset: Int,
+      fallback: BList): Int = {
     val i = reset(j)
     checkpoint(state, i, ring, offset, fallback)
 
@@ -717,27 +725,50 @@ final class Parser[F[_], A] private (
       } else {
         if ((c >= '0' && c <= '9') || c == '-') {
           val j = parseNum(i)
-          rparse(if (enclosure(ring, offset, fallback)) OBJEND else ARREND, j, ring, offset, fallback)
+          rparse(
+            if (enclosure(ring, offset, fallback)) OBJEND else ARREND,
+            j,
+            ring,
+            offset,
+            fallback)
         } else if (c == '"') {
           parseString(i, false)
-          rparse(if (enclosure(ring, offset, fallback)) OBJEND else ARREND, curr, ring, offset, fallback)
+          rparse(
+            if (enclosure(ring, offset, fallback)) OBJEND else ARREND,
+            curr,
+            ring,
+            offset,
+            fallback)
         } else if (c == 't') {
           parseTrue(i)
-          rparse(if (enclosure(ring, offset, fallback)) OBJEND else ARREND, i + 4, ring, offset, fallback)
+          rparse(
+            if (enclosure(ring, offset, fallback)) OBJEND else ARREND,
+            i + 4,
+            ring,
+            offset,
+            fallback)
         } else if (c == 'f') {
           parseFalse(i)
-          rparse(if (enclosure(ring, offset, fallback)) OBJEND else ARREND, i + 5, ring, offset, fallback)
+          rparse(
+            if (enclosure(ring, offset, fallback)) OBJEND else ARREND,
+            i + 5,
+            ring,
+            offset,
+            fallback)
         } else if (c == 'n') {
           parseNull(i)
-          rparse(if (enclosure(ring, offset, fallback)) OBJEND else ARREND, i + 4, ring, offset, fallback)
+          rparse(
+            if (enclosure(ring, offset, fallback)) OBJEND else ARREND,
+            i + 4,
+            ring,
+            offset,
+            fallback)
         } else {
           die(i, "expected json value")
         }
       }
-    } else if (
-      (c == ']' && (state == ARREND || state == ARRBEG)) ||
-      (c == '}' && (state == OBJEND || state == OBJBEG))
-    ) {
+    } else if ((c == ']' && (state == ARREND || state == ARRBEG)) ||
+      (c == '}' && (state == OBJEND || state == OBJBEG))) {
       // we are inside an array or object and have seen a key or a closing
       // brace, respectively.
 
@@ -759,7 +790,12 @@ final class Parser[F[_], A] private (
         plate.finishRow()
         i + 1
       } else {
-        rparse(if (enclosure(ring, offset2, fallback2)) OBJEND else ARREND, i + 1, ring, offset2, fallback2)
+        rparse(
+          if (enclosure(ring, offset2, fallback2)) OBJEND else ARREND,
+          i + 1,
+          ring,
+          offset2,
+          fallback2)
       }
     } else if (state == KEY) {
       // we are in an object expecting to see a key.
@@ -849,7 +885,8 @@ final class Parser[F[_], A] private (
 
           case '{' | '[' =>
             val skipDepth2 = skipDepth + 1
-            if (skipDepth2 >= SKIP_DEPTH_LIMIT) error("cannot skip over structure with more than 134,217,727 levels of nesting")
+            if (skipDepth2 >= SKIP_DEPTH_LIMIT)
+              error("cannot skip over structure with more than 134,217,727 levels of nesting")
             val skipDepthBits = skipDepth2 << SKIP_DEPTH_SHIFT
             rskip(skipDepthBits | SKIP_MAIN, i + 1)
 
@@ -879,8 +916,8 @@ final class Parser[F[_], A] private (
   }
 
   /**
-   * A value of true indicates an object, and false indicates an array. Note that
-   * a non-existent enclosure is indicated by offset < 0
+   * A value of true indicates an object, and false indicates an array. Note that a non-existent
+   * enclosure is indicated by offset < 0
    */
   @inline
   private[this] final def enclosure(ring: Long, offset: Int, fallback: BList): Boolean = {
@@ -891,7 +928,10 @@ final class Parser[F[_], A] private (
   }
 
   @inline
-  private[this] final def checkPushEnclosure(ring: Long, offset: Int, fallback: BList): Boolean =
+  private[this] final def checkPushEnclosure(
+      ring: Long,
+      offset: Int,
+      fallback: BList): Boolean =
     fallback == null
 
   @inline
@@ -926,11 +966,18 @@ object Parser {
   case object ValueStream extends Mode(-1, 0)
   case object SingleValue extends Mode(-1, -1)
 
-  def apply[F[_]: Sync, A](plateF: F[Plate[A]], mode: Mode = SingleValue) : F[BaseParser[F, A]] = {
+  def apply[F[_]: Sync, A](
+      plateF: F[Plate[A]],
+      mode: Mode = SingleValue): F[BaseParser[F, A]] = {
     plateF flatMap { plate =>
-      Sync[F].delay(new Parser(plate, state = mode.start,
-        ring = 0L, roffset = -1, fallback = null,
-        streamMode = mode.value))
+      Sync[F].delay(
+        new Parser(
+          plate,
+          state = mode.start,
+          ring = 0L,
+          roffset = -1,
+          fallback = null,
+          streamMode = mode.value))
     }
   }
 }

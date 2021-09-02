@@ -16,18 +16,20 @@
 
 package tectonic
 
+import java.lang.CharSequence
+import java.lang.IllegalStateException
+import java.lang.Runtime
+import scala._
+
+import Predef._
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
-
 import org.specs2.ScalaCheck
 import org.specs2.mutable._
-
-import tectonic.test.{Event, Generators, ReifiedTerminalPlate}
-
-import scala._, Predef._
-
-import java.lang.{CharSequence, IllegalStateException, Runtime}
+import tectonic.test.Event
+import tectonic.test.Generators
+import tectonic.test.ReifiedTerminalPlate
 
 class ReplayPlateSpecs extends Specification with ScalaCheck {
   import Generators._
@@ -56,48 +58,49 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
       result mustEqual expected
     }.set(minTestsOk = 10000, workers = Runtime.getRuntime.availableProcessors())
 
-    "round-trip events over multiple batches" in prop { (driver1: ∀[λ[α => Plate[α] => Unit]], drivers0: List[∀[λ[α => Plate[α] => Unit]]]) =>
-      // emulating nonemptylist
-      val drivers = driver1 :: drivers0
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+    "round-trip events over multiple batches" in prop {
+      (driver1: ∀[λ[α => Plate[α] => Unit]], drivers0: List[∀[λ[α => Plate[α] => Unit]]]) =>
+        // emulating nonemptylist
+        val drivers = driver1 :: drivers0
+        val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
 
-      // we use init/last to avoid puttting batch boundaries at the end
-      drivers.init foreach { driver =>
-        driver[Option[EventCursor]](plate)
-        plate.appendBatchBoundary()
-      }
+        // we use init/last to avoid puttting batch boundaries at the end
+        drivers.init foreach { driver =>
+          driver[Option[EventCursor]](plate)
+          plate.appendBatchBoundary()
+        }
 
-      drivers.last[Option[EventCursor]](plate)
+        drivers.last[Option[EventCursor]](plate)
 
-      val streamOpt = plate.finishBatch(true)
-      streamOpt must beSome
-      val stream = streamOpt.get
+        val streamOpt = plate.finishBatch(true)
+        streamOpt must beSome
+        val stream = streamOpt.get
 
-      // NB: this test relies on left-to-right traverse, which maybe isn't a good thing to rely on
-      val eff = drivers traverse { driver =>
-        for {
-          resultP <- ReifiedTerminalPlate[IO](false)
+        // NB: this test relies on left-to-right traverse, which maybe isn't a good thing to rely on
+        val eff = drivers traverse { driver =>
+          for {
+            resultP <- ReifiedTerminalPlate[IO](false)
 
-          _ <- IO(stream.drive(resultP))
-          result <- IO(resultP.finishBatch(true))
+            _ <- IO(stream.drive(resultP))
+            result <- IO(resultP.finishBatch(true))
 
-          expectedP <- ReifiedTerminalPlate[IO](false)
-          _ <- IO(driver[List[Event]](expectedP))
-          expected <- IO(expectedP.finishBatch(true))
-        } yield (result, expected)
-      }
+            expectedP <- ReifiedTerminalPlate[IO](false)
+            _ <- IO(driver[List[Event]](expectedP))
+            expected <- IO(expectedP.finishBatch(true))
+          } yield (result, expected)
+        }
 
-      val results = eff.unsafeRunSync()
+        val results = eff.unsafeRunSync()
 
-      val totalLength = results.map(_._2.length).sum
-      stream.length mustEqual (totalLength + drivers.length - 1)
+        val totalLength = results.map(_._2.length).sum
+        stream.length mustEqual (totalLength + drivers.length - 1)
 
-      results must contain({ (pair: (List[Event], List[Event])) =>
-        val (result, expected) = pair
+        results must contain { (pair: (List[Event], List[Event])) =>
+          val (result, expected) = pair
 
-        result.length mustEqual expected.length
-        result mustEqual expected
-      }).forall
+          result.length mustEqual expected.length
+          result mustEqual expected
+        }.forall
     }.set(minTestsOk = 10000, workers = Runtime.getRuntime.availableProcessors())
 
     "implement a trivial batch boundary" in {
@@ -166,7 +169,10 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
       cursor.reset()
       cursor.drive(plate1)
 
-      plate1.finishBatch(true) mustEqual List(Event.Str("hi"), Event.Num("42", -1, -1), Event.Num("42", -1, -1))
+      plate1.finishBatch(true) mustEqual List(
+        Event.Str("hi"),
+        Event.Num("42", -1, -1),
+        Event.Num("42", -1, -1))
     }
 
     "realign marks to the start of the batch" in {
@@ -284,7 +290,6 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
       fourthResults mustEqual List(Event.Str("second"))
     }
 
-
     "measure distance during rewind" in {
       val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
 
@@ -304,30 +309,28 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
       // we're going to ignore this anyway
       val sink = ReifiedTerminalPlate[IO](false).unsafeRunSync()
 
-      stream.nextRow(sink)   // "first"
+      stream.nextRow(sink) // "first"
       stream.rewind() mustEqual 2
 
-      stream.nextRow(sink)   // "first"
+      stream.nextRow(sink) // "first"
       stream.mark()
-      stream.nextRow(sink)   // "second"
+      stream.nextRow(sink) // "second"
       stream.rewind() mustEqual 2
 
-      stream.nextRow(sink)    // "second"
-      stream.nextRow(sink)    // 42
+      stream.nextRow(sink) // "second"
+      stream.nextRow(sink) // 42
       stream.mark()
-      stream.nextRow(sink)    // { "key": "third" }
+      stream.nextRow(sink) // { "key": "third" }
       stream.rewind() mustEqual 4
 
-      stream.nextRow(sink)    // { "key": "third" }
+      stream.nextRow(sink) // { "key": "third" }
       stream.rewind() mustEqual 4
     }
 
     "correctly grow the buffers" in {
       val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
 
-      (0 until 131072 + 1) foreach { _ =>
-        plate.nul()
-      }
+      (0 until 131072 + 1) foreach { _ => plate.nul() }
 
       val cursor = plate.finishBatch(true).get
       var counter = 0
@@ -367,9 +370,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
       val plate = ReplayPlate[IO](8200, true).unsafeRunSync()
 
       {
-        (0 until 131072 + 1) foreach { _ =>
-          plate.nul()
-        }
+        (0 until 131072 + 1) foreach { _ => plate.nul() }
       } must throwAn[IllegalStateException]
     }
   }

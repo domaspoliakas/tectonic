@@ -16,12 +16,23 @@
 
 package tectonic
 
-import cats.{Eval, Eq, Foldable, MonadError, Monoid, Semigroup}
-import cats.implicits._
-
-import scala.{Int, Nothing, Product, Serializable, StringContext}
+import scala.Int
+import scala.Nothing
+import scala.Product
+import scala.Serializable
+import scala.StringContext
 import scala.annotation.tailrec
-import scala.util.{Either, Left, Right}
+import scala.util.Either
+import scala.util.Left
+import scala.util.Right
+
+import cats.Eq
+import cats.Eval
+import cats.Foldable
+import cats.MonadError
+import cats.Monoid
+import cats.Semigroup
+import cats.implicits._
 
 sealed trait ParseResult[+A] extends Product with Serializable {
 
@@ -31,7 +42,12 @@ sealed trait ParseResult[+A] extends Product with Serializable {
         Left(e)
 
       case ParseResult.Partial(a, remaining) =>
-        Left(ParseException(s"partial parse success producing value $a with $remaining bytes remaining", -1, -1, -1))
+        Left(
+          ParseException(
+            s"partial parse success producing value $a with $remaining bytes remaining",
+            -1,
+            -1,
+            -1))
 
       case ParseResult.Complete(a) =>
         Right(a)
@@ -39,7 +55,9 @@ sealed trait ParseResult[+A] extends Product with Serializable {
 }
 
 private[tectonic] sealed trait LowPriorityInstances {
-  import ParseResult.{Complete, Partial, Failure}
+  import ParseResult.Complete
+  import ParseResult.Failure
+  import ParseResult.Partial
 
   implicit def semigroup[A: Semigroup]: Semigroup[ParseResult[A]] =
     new ParseResultSemigroup[A]
@@ -68,7 +86,7 @@ object ParseResult extends LowPriorityInstances {
     }
 
   implicit def monoid[A: Monoid]: Monoid[ParseResult[A]] =
-    new ParseResultSemigroup[A] with Monoid[ParseResult[A]]{
+    new ParseResultSemigroup[A] with Monoid[ParseResult[A]] {
       def empty = Complete(Monoid[A].empty)
     }
 
@@ -77,7 +95,8 @@ object ParseResult extends LowPriorityInstances {
 
       def pure[A](a: A): ParseResult[A] = Complete(a)
 
-      def handleErrorWith[A](fa: ParseResult[A])(f: ParseException => ParseResult[A]): ParseResult[A] =
+      def handleErrorWith[A](fa: ParseResult[A])(
+          f: ParseException => ParseResult[A]): ParseResult[A] =
         fa match {
           case Failure(e) => f(e)
           case other => other
@@ -89,11 +108,12 @@ object ParseResult extends LowPriorityInstances {
         fa match {
           case Failure(e) => Failure(e)
 
-          case Partial(a, rem1) => f(a) match {
-            case Failure(e) => Failure(e)
-            case Partial(b, rem2) => Partial(b, rem1 + rem2)
-            case Complete(b) => Partial(b, rem1)
-          }
+          case Partial(a, rem1) =>
+            f(a) match {
+              case Failure(e) => Failure(e)
+              case Partial(b, rem2) => Partial(b, rem1 + rem2)
+              case Complete(b) => Partial(b, rem1)
+            }
 
           case Complete(a) => f(a)
         }
@@ -124,7 +144,8 @@ object ParseResult extends LowPriorityInstances {
           case Complete(a) => f(b, a)
         }
 
-      def foldRight[A, B](fa: ParseResult[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
+      def foldRight[A, B](fa: ParseResult[A], lb: Eval[B])(
+          f: (A, Eval[B]) => Eval[B]): Eval[B] =
         fa match {
           case Failure(_) => lb
           case Partial(a, _) => f(a, lb)

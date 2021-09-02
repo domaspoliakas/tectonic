@@ -17,15 +17,23 @@
 package tectonic
 package csv
 
+import java.lang.CharSequence
+import java.lang.String
+import java.lang.System
+import scala.Array
+import scala.Boolean
+import scala.Byte
+import scala.Char
+import scala.Int
+import scala.Nothing
+import scala.Unit
+import scala.annotation.switch
+import scala.annotation.tailrec
+import scala.inline
+
 import cats.effect.Sync
 import cats.syntax.all._
-
 import tectonic.util.CharBuilder
-
-import scala.{inline, Array, Boolean, Byte, Char, Int, Nothing, Unit}
-import scala.annotation.{switch, tailrec}
-
-import java.lang.{CharSequence, String, System}
 
 final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends BaseParser[F, A] {
 
@@ -45,19 +53,20 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
   @inline private[this] final val HEADER_MASK = 1 << 1
   @inline private[this] final val INFER_MASK = 1 << 2
 
-  @inline private[this] final val RECORD = 0       // awaiting a record
-  @inline private[this] final val END = 1          // awaiting a delimiter
+  @inline private[this] final val RECORD = 0 // awaiting a record
+  @inline private[this] final val END = 1 // awaiting a delimiter
 
-  @inline private[this] final val ROW = 0          // parsing a row
-  @inline private[this] final val HEADER = 1 << 1  // parsing a header
+  @inline private[this] final val ROW = 0 // parsing a row
+  @inline private[this] final val HEADER = 1 << 1 // parsing a header
 
-  @inline private[this] final val NOT_INFERRING = 0   // not inferring headers
-  @inline private[this] final val INFERRING = 1 << 2  // inferring headers
+  @inline private[this] final val NOT_INFERRING = 0 // not inferring headers
+  @inline private[this] final val INFERRING = 1 << 2 // inferring headers
 
   private[this] final var state = if (config.header) HEADER else INFERRING
 
-  private[this] final var column = 0    // current column, regardless of state
-  private[this] final var header: Array[CharSequence] = new Array[CharSequence](32)   // hopefully optimize for 32 columns
+  private[this] final var column = 0 // current column, regardless of state
+  private[this] final var header: Array[CharSequence] =
+    new Array[CharSequence](32) // hopefully optimize for 32 columns
   private[this] final var headerMax = -1
 
   private[this] final val record: Int = config.record & 0xff
@@ -88,7 +97,8 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
                   plate.finishRow()
                   ParseResult.Complete(plate.finishBatch(true))
                 } else {
-                  ParseResult.Failure(ParseException("unexpected end of file: missing records", -1, -1, -1))
+                  ParseResult.Failure(
+                    ParseException("unexpected end of file: missing records", -1, -1, -1))
                 }
 
               case END =>
@@ -97,11 +107,13 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
                   plate.finishRow()
                   ParseResult.Complete(plate.finishBatch(true))
                 } else {
-                  ParseResult.Failure(ParseException("unexpected end of file: missing records", -1, -1, -1))
+                  ParseResult.Failure(
+                    ParseException("unexpected end of file: missing records", -1, -1, -1))
                 }
             }
           } else {
-            ParseResult.Failure(ParseException("unexpected end of file in header row", -1, -1, -1))
+            ParseResult.Failure(
+              ParseException("unexpected end of file in header row", -1, -1, -1))
           }
         } else {
           // we ran out of data, so return what we have so far
@@ -335,7 +347,9 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
               die(i, "unexpected end of row: missing records")
             }
           } else {
-            val str = parseRecordUnquoted(i)    // consume first, so we get the AsyncException if relevant
+            val str = parseRecordUnquoted(
+              i
+            ) // consume first, so we get the AsyncException if relevant
 
             if (inHeader) {
               header(column) = str
@@ -352,7 +366,9 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
             parse(continue | END, curr, column)
           }
         } else if (c == openQuote) {
-          val str = parseRecordQuoted(i + 1)    // consume first, so we get the AsyncException if relevant
+          val str = parseRecordQuoted(
+            i + 1
+          ) // consume first, so we get the AsyncException if relevant
 
           if (inHeader) {
             if (str.length == 0) {
@@ -372,7 +388,9 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
 
           parse(continue | END, curr, column)
         } else {
-          val str = parseRecordUnquoted(i)    // consume first, so we get the AsyncException if relevant
+          val str = parseRecordUnquoted(
+            i
+          ) // consume first, so we get the AsyncException if relevant
 
           if (inHeader) {
             header(column) = str
@@ -437,7 +455,7 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
   // generates things like A, B, C, ..., Z, AA, AB, etc...
   // literally converts column into big-endian base-26
   private[this] final def asHeader(column: Int): String = {
-    val back = new Array[Char](column / 26 + 1)    // deal with ceiling
+    val back = new Array[Char](column / 26 + 1) // deal with ceiling
     var i = 0
     var cur = column
     do {
@@ -447,7 +465,8 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
     } while (cur > 0)
 
     if (back.length > 1) {
-      back(0) = (back(0) - 1).toChar    // this is stupid, but we want A = 1 in the most-significant column
+      back(0) =
+        (back(0) - 1).toChar // this is stupid, but we want A = 1 in the most-significant column
     }
 
     new String(back)
@@ -461,9 +480,7 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
 object Parser {
 
   def apply[F[_]: Sync, A](plateF: F[Plate[A]], config: Config): F[BaseParser[F, A]] = {
-    plateF flatMap { plate =>
-      Sync[F].delay(new Parser[F, A](plate, config))
-    }
+    plateF flatMap { plate => Sync[F].delay(new Parser[F, A](plate, config)) }
   }
 
   // defaults to Excel-style with Windows newlines
@@ -471,8 +488,8 @@ object Parser {
       header: Boolean = true,
       record: Byte = ',',
       row1: Byte = '\r',
-      row2: Byte = '\n',    // if this is unneeded, it should be set to \0
-      openQuote: Byte = '"',    // e.g. “
-      closeQuote: Byte = '"',   // e.g. ”
-      escape: Byte = '"')   // e.g. \\
+      row2: Byte = '\n', // if this is unneeded, it should be set to \0
+      openQuote: Byte = '"', // e.g. “
+      closeQuote: Byte = '"', // e.g. ”
+      escape: Byte = '"') // e.g. \\
 }

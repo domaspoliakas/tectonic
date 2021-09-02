@@ -17,18 +17,17 @@
 package tectonic
 package test
 
+import java.lang.String
+import scala.PartialFunction
+import scala.StringContext
+
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.implicits._
-
 import org.specs2.execute.Result
-import org.specs2.matcher.{Matcher, MatchersImplicits}
-
+import org.specs2.matcher.Matcher
+import org.specs2.matcher.MatchersImplicits
 import tectonic.csv.Parser
-
-import scala.{PartialFunction, StringContext}
-
-import java.lang.String
 
 // TODO collapse with json package object
 package object csv {
@@ -36,33 +35,45 @@ package object csv {
 
   import MatchersImplicits._
 
-  def parseAs(expected: Event*)(implicit config: Parser.Config, runtime: IORuntime): Matcher[String] = { input: String =>
-    val resultsF = for {
-      parser <- Parser(ReifiedTerminalPlate[IO](), config)
-      left <- parser.absorb(input)
-      right <- parser.finish
-    } yield (left, right)
+  def parseAs(
+      expected: Event*)(implicit config: Parser.Config, runtime: IORuntime): Matcher[String] = {
+    input: String =>
+      val resultsF = for {
+        parser <- Parser(ReifiedTerminalPlate[IO](), config)
+        left <- parser.absorb(input)
+        right <- parser.finish
+      } yield (left, right)
 
-    resultsF.unsafeRunSync() match {
-      case (ParseResult.Complete(init), ParseResult.Complete(tail)) =>
-        val results = init ++ tail
-        (results == expected.toList, s"$results != ${expected.toList}")
+      resultsF.unsafeRunSync() match {
+        case (ParseResult.Complete(init), ParseResult.Complete(tail)) =>
+          val results = init ++ tail
+          (results == expected.toList, s"$results != ${expected.toList}")
 
-      case (ParseResult.Partial(a, remaining), _) =>
-        (false, s"left partially succeded with partial result $a and $remaining bytes remaining")
+        case (ParseResult.Partial(a, remaining), _) =>
+          (
+            false,
+            s"left partially succeded with partial result $a and $remaining bytes remaining")
 
-      case (_, ParseResult.Partial(a, remaining)) =>
-        (false, s"right partially succeded with partial result $a and $remaining bytes remaining")
+        case (_, ParseResult.Partial(a, remaining)) =>
+          (
+            false,
+            s"right partially succeded with partial result $a and $remaining bytes remaining")
 
-      case (ParseResult.Failure(err), _) =>
-        (false, s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
+        case (ParseResult.Failure(err), _) =>
+          (
+            false,
+            s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
 
-      case (_, ParseResult.Failure(err)) =>
-        (false, s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
-    }
+        case (_, ParseResult.Failure(err)) =>
+          (
+            false,
+            s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
+      }
   }
 
-  def failParseWithError(errorPF: PartialFunction[ParseException, Result])(implicit config: Parser.Config, runtime: IORuntime): Matcher[String] = { input: String =>
+  def failParseWithError(errorPF: PartialFunction[ParseException, Result])(
+      implicit config: Parser.Config,
+      runtime: IORuntime): Matcher[String] = { input: String =>
     val resultsF = for {
       parser <- Parser(ReifiedTerminalPlate[IO](), config)
       left <- parser.absorb(input)

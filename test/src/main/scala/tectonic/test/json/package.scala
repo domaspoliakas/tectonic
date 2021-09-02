@@ -17,14 +17,14 @@
 package tectonic
 package test
 
+import scala.List
+import scala.StringContext
+
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-
-import org.specs2.matcher.{Matcher, MatchersImplicits}
-
+import org.specs2.matcher.Matcher
+import org.specs2.matcher.MatchersImplicits
 import tectonic.json.Parser
-
-import scala.{List, StringContext}
 
 package object json {
   private object MatchersImplicits extends MatchersImplicits
@@ -37,7 +37,9 @@ package object json {
   def parseAs[A: Absorbable](expected: Event*)(implicit runtime: IORuntime): Matcher[A] =
     parseAsWithPlate(expected: _*)(p => p)
 
-  def parseAsWithPlate[A: Absorbable](expected: Event*)(f: Plate[List[Event]] => Plate[List[Event]])(implicit runtime: IORuntime): Matcher[A] = { input: A =>
+  def parseAsWithPlate[A: Absorbable](
+      expected: Event*)(f: Plate[List[Event]] => Plate[List[Event]])(
+      implicit runtime: IORuntime): Matcher[A] = { input: A =>
     val resultsF = for {
       parser <- Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream)
       left <- Absorbable[A].absorb(parser, input)
@@ -50,20 +52,29 @@ package object json {
         (results == expected.toList, s"$results != ${expected.toList}")
 
       case (ParseResult.Partial(a, remaining), _) =>
-        (false, s"left partially succeded with partial result $a and $remaining bytes remaining")
+        (
+          false,
+          s"left partially succeded with partial result $a and $remaining bytes remaining")
 
       case (_, ParseResult.Partial(a, remaining)) =>
-        (false, s"right partially succeded with partial result $a and $remaining bytes remaining")
+        (
+          false,
+          s"right partially succeded with partial result $a and $remaining bytes remaining")
 
       case (ParseResult.Failure(err), _) =>
-        (false, s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
+        (
+          false,
+          s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
 
       case (_, ParseResult.Failure(err)) =>
-        (false, s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
+        (
+          false,
+          s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
     }
   }
 
-  def failToParseWith[A: Absorbable](expected: ParseException)(implicit runtime: IORuntime): Matcher[A] = { input: A =>
+  def failToParseWith[A: Absorbable](expected: ParseException)(
+      implicit runtime: IORuntime): Matcher[A] = { input: A =>
     val resultsF = for {
       parser <- Parser(ReifiedTerminalPlate[IO](), Parser.ValueStream)
       left <- Absorbable[A].absorb(parser, input)
@@ -75,16 +86,28 @@ package object json {
         (false, s"blergh", s"input parsed successfully (expected failure)")
 
       case (ParseResult.Partial(a, remaining), _) =>
-        (false, "", s"left partially succeded with partial result $a and $remaining bytes remaining")
+        (
+          false,
+          "",
+          s"left partially succeded with partial result $a and $remaining bytes remaining")
 
       case (_, ParseResult.Partial(a, remaining)) =>
-        (false, "", s"right partially succeded with partial result $a and $remaining bytes remaining")
+        (
+          false,
+          "",
+          s"right partially succeded with partial result $a and $remaining bytes remaining")
 
       case (ParseResult.Failure(err), _) =>
-        (err == expected, s"input failed to parse and $err == $expected", s"input failed to parse but $err != $expected")
+        (
+          err == expected,
+          s"input failed to parse and $err == $expected",
+          s"input failed to parse but $err != $expected")
 
       case (_, ParseResult.Failure(err)) =>
-        (err == expected, s"input failed to parse and $err == $expected", s"input failed to parse but $err != $expected")
+        (
+          err == expected,
+          s"input failed to parse and $err == $expected",
+          s"input failed to parse but $err != $expected")
 
     }
   }

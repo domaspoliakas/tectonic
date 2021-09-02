@@ -17,10 +17,9 @@
 package tectonic
 package test
 
-import scala._
-import scala.Predef._
-
 import java.lang.CharSequence
+import scala.Predef._
+import scala._
 
 import cats.effect.Sync
 

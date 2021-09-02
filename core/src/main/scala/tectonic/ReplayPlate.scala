@@ -16,17 +16,26 @@
 
 package tectonic
 
+import java.lang.CharSequence
+import java.lang.IllegalStateException
+import java.lang.System
+import scala.Array
+import scala.Boolean
+import scala.Int
+import scala.Long
+import scala.None
+import scala.Option
+import scala.Some
+import scala.StringContext
+import scala.Unit
+
 import cats.effect.Sync
-
-import scala.{Array, Boolean, Int, Long, None, Option, Some, StringContext, Unit}
-
-import java.lang.{CharSequence, IllegalStateException, System}
 
 /**
  * Produces None until finishBatch(true) is called.
  */
 final class ReplayPlate private (
-    limit: Int,   // never grow the tag buffer size beyond this point
+    limit: Int, // never grow the tag buffer size beyond this point
     retainSkips: Boolean)
     extends Plate[Option[EventCursor]] {
 

@@ -16,12 +16,14 @@
 
 package tectonic
 
+import scala.StringContext
+
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-
-import org.specs2.matcher.{BeEqualTo, Expectable, Matcher, MatchResult}
-
-import scala.StringContext
+import org.specs2.matcher.BeEqualTo
+import org.specs2.matcher.Expectable
+import org.specs2.matcher.MatchResult
+import org.specs2.matcher.Matcher
 
 package object test {
 
@@ -44,11 +46,7 @@ package object test {
             exp)
 
         case ParseResult.Complete(b) =>
-          Matcher.result[B](
-            false,
-            "",
-            s"${exp.description} was Complete but $a != $b",
-            exp)
+          Matcher.result[B](false, "", s"${exp.description} was Complete but $a != $b", exp)
 
         case ParseResult.Partial(a, remaining) =>
           Matcher.result[B](

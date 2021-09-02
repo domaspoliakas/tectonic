@@ -17,12 +17,17 @@
 package tectonic
 package test
 
-import cats.effect.Sync
-
-import scala.{Array, Boolean, Int, List, Nil, Unit}
+import java.lang.CharSequence
+import java.lang.SuppressWarnings
+import scala.Array
+import scala.Boolean
+import scala.Int
+import scala.List
+import scala.Nil
+import scala.Unit
 import scala.collection.mutable
 
-import java.lang.{CharSequence, SuppressWarnings}
+import cats.effect.Sync
 
 @SuppressWarnings(
   Array(
@@ -114,7 +119,10 @@ object ReifiedTerminalPlate {
   def apply[F[_]: Sync](accumToTerminal: Boolean = true): F[Plate[List[Event]]] =
     Sync[F].delay(new ReifiedTerminalPlate(accumToTerminal))
 
-  def visit[F[_]: Sync, A](events: List[Event], plate: Plate[A], terminus: Boolean = true): F[A] = Sync[F] delay {
+  def visit[F[_]: Sync, A](
+      events: List[Event],
+      plate: Plate[A],
+      terminus: Boolean = true): F[A] = Sync[F] delay {
     events foreach {
       case Event.Nul => plate.nul()
       case Event.Fls => plate.fls()
