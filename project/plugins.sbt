@@ -6,6 +6,5 @@ credentials += Credentials(
 
 resolvers += "GitHub Package Registry" at "https://maven.pkg.github.com/precog/_"
 
-addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.10.0")
-addSbtPlugin("com.precog" % "sbt-precog" % "4.1.0-43e7078")
+addSbtPlugin("com.precog" % "sbt-precog" % "4.1.1-bd33082")
 addSbtPlugin("pl.project13.scala" % "sbt-jmh" % "0.3.7")
