@@ -16,12 +16,6 @@
 
 package tectonic
 
-import java.lang.CharSequence
-import java.lang.IllegalStateException
-import java.lang.Runtime
-import scala._
-
-import Predef._
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._

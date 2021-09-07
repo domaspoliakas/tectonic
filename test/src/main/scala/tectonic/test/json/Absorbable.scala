@@ -17,10 +17,7 @@
 package tectonic
 package test
 
-import java.lang.String
 import java.nio.ByteBuffer
-import scala.Array
-import scala.Byte
 
 import cats.effect.IO
 

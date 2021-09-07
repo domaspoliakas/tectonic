@@ -16,9 +16,6 @@
 
 package tectonic
 
-import java.lang.AssertionError
-import java.lang.CharSequence
-import scala._
 import scala.annotation.switch
 
 import Predef._

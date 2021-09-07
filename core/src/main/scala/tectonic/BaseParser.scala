@@ -42,21 +42,8 @@ package tectonic
  * kDEALINGS IN THE SOFTWARE.
  */
 
-import java.lang.CharSequence
-import java.lang.Math.max
-import java.lang.String
-import java.lang.System
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import scala.Array
-import scala.Boolean
-import scala.Byte
-import scala.Char
-import scala.Int
-import scala.Nothing
-import scala.Predef._
-import scala.Unit
-import scala.sys
 
 import cats.effect.Sync
 
@@ -115,7 +102,7 @@ abstract class BaseParser[F[_], A] {
     // feed with similarly-sized buffers.
     if (need > allocated) {
       val doubled = if (allocated < 0x40000000) allocated * 2 else Int.MaxValue
-      val newsize = max(need, doubled)
+      val newsize = Math.max(need, doubled)
       val newdata = new Array[Byte](newsize)
       System.arraycopy(data, 0, newdata, 0, len)
       data = newdata

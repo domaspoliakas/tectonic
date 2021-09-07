@@ -17,21 +17,11 @@
 package tectonic
 package json
 
-import java.lang.CharSequence
-import scala.Array
-import scala.Boolean
-import scala.Byte
-import scala.Int
-import scala.List
-import scala.Nil
-import scala.Predef
-import scala.Unit
 import scala.collection.mutable
 import scala.util.Either
 import scala.util.Left
 import scala.util.Right
 
-import Predef._
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._

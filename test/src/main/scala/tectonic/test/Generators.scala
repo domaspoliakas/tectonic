@@ -17,19 +17,8 @@
 package tectonic
 package test
 
-import java.lang.SuppressWarnings
-import scala.AnyVal
-import scala.Array
-import scala.Boolean
-import scala.Char
-import scala.Int
-import scala.List
-import scala.Nil
-import scala.Predef
-import scala.Unit
 import scala.language.postfixOps
 
-import Predef._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 
@@ -52,7 +41,6 @@ object Generators {
     // technically this is all safe because we're skolemizing on the Unit
     val gen = genPlate[Unit] map { f =>
       new ∀[λ[α => Plate[α] => Unit]] {
-        @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
         def apply[α] = f.asInstanceOf[Plate[α] => Unit]
       }
     }
@@ -60,7 +48,6 @@ object Generators {
     Arbitrary(gen)
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
   def genPlate[A]: GenF[A] = {
     val genSubPlate =
       Gen.frequency(20000 -> genRow[A] *>> genFinishRow[A], 1 -> genFinishBatch[A])
@@ -74,7 +61,6 @@ object Generators {
     }
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
   def genRow[A]: GenF[A] =
     Gen.frequency(
       1 -> genNul[A],
@@ -137,7 +123,6 @@ object Generators {
 
   // I mean, it's not that hard to do this right. may as well
   // note that this is more robust than generating doubles since we can get much larger numbers
-  @SuppressWarnings(Array("org.wartremover.warts.StringPlusAny"))
   def genNum[A]: GenF[A] = {
     val genNumberStr =
       Gen.containerOf[λ[α => String], Char](Gen.choose('0', '9')).filter(_.length > 0)

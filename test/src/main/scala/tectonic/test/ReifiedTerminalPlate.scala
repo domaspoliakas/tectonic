@@ -17,23 +17,10 @@
 package tectonic
 package test
 
-import java.lang.CharSequence
-import java.lang.SuppressWarnings
-import scala.Array
-import scala.Boolean
-import scala.Int
-import scala.List
-import scala.Nil
-import scala.Unit
 import scala.collection.mutable
 
 import cats.effect.Sync
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.NonUnitStatements",
-    "org.wartremover.warts.Var",
-    "org.wartremover.warts.TraversableOps"))
 final class ReifiedTerminalPlate private (accumToTerminal: Boolean) extends Plate[List[Event]] {
   import Event._
 
@@ -115,7 +102,6 @@ final class ReifiedTerminalPlate private (accumToTerminal: Boolean) extends Plat
 
 object ReifiedTerminalPlate {
 
-  @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
   def apply[F[_]: Sync](accumToTerminal: Boolean = true): F[Plate[List[Event]]] =
     Sync[F].delay(new ReifiedTerminalPlate(accumToTerminal))
 

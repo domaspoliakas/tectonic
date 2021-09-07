@@ -16,11 +16,6 @@
 
 package tectonic
 
-import scala.Int
-import scala.Nothing
-import scala.Product
-import scala.Serializable
-import scala.StringContext
 import scala.annotation.tailrec
 import scala.util.Either
 import scala.util.Left

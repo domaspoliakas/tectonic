@@ -16,8 +16,6 @@
 
 package tectonic.json
 
-import scala.Long
-
 // optimized columnar plate vs optimized row facade (invented out of thin air by Daniel and Alissa 😁)
 private[json] object FacadeTuningParams {
   object Tectonic {

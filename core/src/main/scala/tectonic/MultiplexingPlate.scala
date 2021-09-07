@@ -16,9 +16,6 @@
 
 package tectonic
 
-import java.lang.CharSequence
-import scala._
-
 class MultiplexingPlate[A](main: Plate[A], side: Plate[Unit]) extends Plate[A] {
 
   private[this] val sig = Signal

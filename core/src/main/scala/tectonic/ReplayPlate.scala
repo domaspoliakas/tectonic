@@ -16,19 +16,6 @@
 
 package tectonic
 
-import java.lang.CharSequence
-import java.lang.IllegalStateException
-import java.lang.System
-import scala.Array
-import scala.Boolean
-import scala.Int
-import scala.Long
-import scala.None
-import scala.Option
-import scala.Some
-import scala.StringContext
-import scala.Unit
-
 import cats.effect.Sync
 
 /**

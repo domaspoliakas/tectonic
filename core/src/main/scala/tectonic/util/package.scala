@@ -42,12 +42,6 @@ package tectonic
  * kDEALINGS IN THE SOFTWARE.
  */
 
-import java.lang.CharSequence
-import java.lang.SuppressWarnings
-import scala.Array
-import scala.Int
-import scala.Long
-
 package object util {
 
   /**
@@ -70,14 +64,6 @@ package object util {
    *
    * This method will throw an `InvalidLong` exception on invalid input.
    */
-  @SuppressWarnings(
-    Array(
-      "org.wartremover.warts.Var",
-      "org.wartremover.warts.While",
-      "org.wartremover.warts.ToString",
-      "org.wartremover.warts.Throw",
-      "org.wartremover.warts.Equals"
-    ))
   def parseLong(cs: CharSequence): Long = {
 
     // we store the inverse of the positive sum, to ensure we don't
@@ -128,14 +114,6 @@ package object util {
    * parser). When in doubt, use `parseLong(cs)`, which is still significantly faster than
    * `java.lang.Long.parseLong(cs.toString)`.
    */
-  @SuppressWarnings(
-    Array(
-      "org.wartremover.warts.Var",
-      "org.wartremover.warts.While",
-      "org.wartremover.warts.ToString",
-      "org.wartremover.warts.Throw",
-      "org.wartremover.warts.Equals"
-    ))
   def parseLongUnsafe(cs: CharSequence): Long = {
 
     // we store the inverse of the positive sum, to ensure we don't

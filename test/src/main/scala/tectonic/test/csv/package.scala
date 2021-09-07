@@ -17,10 +17,6 @@
 package tectonic
 package test
 
-import java.lang.String
-import scala.PartialFunction
-import scala.StringContext
-
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.implicits._

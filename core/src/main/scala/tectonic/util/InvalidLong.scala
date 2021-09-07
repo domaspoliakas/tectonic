@@ -16,9 +16,6 @@
 
 package tectonic.util
 
-import java.lang.NumberFormatException
-import java.lang.String
-import scala.StringContext
 import scala.util.control
 
 final class InvalidLong(s: String)

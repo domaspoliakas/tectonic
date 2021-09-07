@@ -16,15 +16,7 @@
 
 package tectonic.harness
 
-import java.lang.CharSequence
-import java.lang.SuppressWarnings
 import java.nio.file.Path
-import scala.Array
-import scala.Boolean
-import scala.Byte
-import scala.Int
-import scala.Long
-import scala.Unit
 
 import cats.effect.IO
 import cats.effect.Sync
@@ -70,7 +62,6 @@ object RowCountHarness {
     def apply[F[_]: Sync]: F[Plate[Long]] = {
       Sync[F] delay {
         new Plate[Long] {
-          @SuppressWarnings(Array("org.wartremover.warts.Var"))
           private var count: Long = 0
 
           def nul(): Signal = Signal.Continue

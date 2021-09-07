@@ -19,6 +19,7 @@ package json
 
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
+import scala.annotation.nowarn
 import scala.collection.immutable.List
 
 import _root_.fs2.Chunk
@@ -53,6 +54,7 @@ class SkipBenchmarks {
 
   // includes the cost of file IO; not sure if that's a good thing?
   @Benchmark
+  @nowarn("cat=unused-params")
   def projectBarKeyFromUgh10k(bh: Blackhole): Unit = {
     val plateF = for {
       terminal <- BlackholePlate[IO](

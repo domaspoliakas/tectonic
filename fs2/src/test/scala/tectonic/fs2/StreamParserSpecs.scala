@@ -17,13 +17,7 @@
 package tectonic
 package fs2
 
-import java.lang.CharSequence
 import java.nio.ByteBuffer
-import scala.Boolean
-import scala.Byte
-import scala.Int
-import scala.List
-import scala.Unit
 
 import _root_.fs2.Chunk
 import _root_.fs2.Pipe

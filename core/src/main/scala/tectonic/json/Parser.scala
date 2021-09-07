@@ -43,19 +43,8 @@ package json
  * kDEALINGS IN THE SOFTWARE.
  */
 
-import java.lang.CharSequence
-import java.lang.IndexOutOfBoundsException
-import scala.Array
-import scala.Boolean
-import scala.Char
-import scala.Int
-import scala.Long
-import scala.StringContext
-import scala.Unit
-// import scala._, Predef._
 import scala.annotation.switch
 import scala.annotation.tailrec
-import scala.inline
 
 import cats.effect.Sync
 import cats.syntax.all._
@@ -226,7 +215,7 @@ final class Parser[F[_], A] private (
                 die(offset, "expected json value")
               }
 
-            case c =>
+            case _ =>
               if (state == ASYNC_END) {
                 die(offset, "expected eof")
               } else if (state == ASYNC_POSTVAL) {
@@ -701,7 +690,7 @@ final class Parser[F[_], A] private (
         var ring2 = ring
         var fallback2 = fallback
 
-        if (checkPushEnclosure(ring, offset, fallback)) {
+        if (checkPushEnclosure(fallback)) {
           offset2 = offset + 1
           ring2 = pushEnclosureRing(ring, offset, false)
         } else {
@@ -714,7 +703,7 @@ final class Parser[F[_], A] private (
         var ring2 = ring
         var fallback2 = fallback
 
-        if (checkPushEnclosure(ring, offset, fallback)) {
+        if (checkPushEnclosure(fallback)) {
           offset2 = offset + 1
           ring2 = pushEnclosureRing(ring, offset, true)
         } else {
@@ -775,7 +764,7 @@ final class Parser[F[_], A] private (
       var offset2 = offset
       var fallback2 = fallback
 
-      if (checkPopEnclosure(ring, offset, fallback))
+      if (checkPopEnclosure(fallback))
         offset2 = offset - 1
       else
         fallback2 = popEnclosureFallback(fallback)
@@ -928,10 +917,7 @@ final class Parser[F[_], A] private (
   }
 
   @inline
-  private[this] final def checkPushEnclosure(
-      ring: Long,
-      offset: Int,
-      fallback: BList): Boolean =
+  private[this] final def checkPushEnclosure(fallback: BList): Boolean =
     fallback == null
 
   @inline
@@ -947,7 +933,7 @@ final class Parser[F[_], A] private (
     enc :: fallback
 
   @inline
-  private[this] final def checkPopEnclosure(ring: Long, offset: Int, fallback: BList): Boolean =
+  private[this] final def checkPopEnclosure(fallback: BList): Boolean =
     fallback == null
 
   @inline

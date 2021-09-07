@@ -17,19 +17,8 @@
 package tectonic
 package csv
 
-import java.lang.CharSequence
-import java.lang.String
-import java.lang.System
-import scala.Array
-import scala.Boolean
-import scala.Byte
-import scala.Char
-import scala.Int
-import scala.Nothing
-import scala.Unit
 import scala.annotation.switch
 import scala.annotation.tailrec
-import scala.inline
 
 import cats.effect.Sync
 import cats.syntax.all._

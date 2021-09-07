@@ -17,10 +17,6 @@
 package tectonic
 package test
 
-import java.lang.CharSequence
-import scala.Predef._
-import scala._
-
 import cats.effect.Sync
 
 final class MutantPlate private () extends Plate[Unit] {

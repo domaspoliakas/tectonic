@@ -17,9 +17,6 @@
 package tectonic
 package test
 
-import scala.List
-import scala.StringContext
-
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import org.specs2.matcher.Matcher

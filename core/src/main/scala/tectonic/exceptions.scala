@@ -16,9 +16,6 @@
 
 package tectonic
 
-import java.lang.Exception
-import java.lang.String
-import scala.Int
 import scala.util.control
 
 final case class ParseException(msg: String, index: Int, line: Int, col: Int)

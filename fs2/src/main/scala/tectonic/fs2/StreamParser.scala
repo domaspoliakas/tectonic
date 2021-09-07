@@ -17,12 +17,6 @@
 package tectonic
 package fs2
 
-import scala.Byte
-import scala.Int
-import scala.None
-import scala.Option
-import scala.Some
-import scala.Unit
 import scala.collection.mutable
 
 import _root_.fs2.Chunk

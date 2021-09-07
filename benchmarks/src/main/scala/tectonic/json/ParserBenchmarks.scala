@@ -19,6 +19,7 @@ package json
 
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
+import scala.annotation.nowarn
 import scala.collection.immutable.List
 
 import _root_.fs2.Chunk
@@ -73,6 +74,7 @@ class ParserBenchmarks {
 
   // includes the cost of file IO; not sure if that's a good thing?
   @Benchmark
+  @nowarn("cat=unused-params")
   def parseThroughFs2(bh: Blackhole): Unit = {
     val modeStart = input.indexOf('(')
     val inputMode = input.substring(modeStart + 1, input.length - 1) == "wrapped"
