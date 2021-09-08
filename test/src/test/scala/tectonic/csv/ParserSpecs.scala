@@ -18,13 +18,9 @@ package tectonic
 package csv
 
 import cats.effect.unsafe.implicits.global
-
 import org.specs2.mutable.Specification
-
 import tectonic.test.Event
 import tectonic.test.csv._
-
-import scala.List
 
 class ParserSpecs extends Specification {
   import Event._
@@ -39,15 +35,37 @@ class ParserSpecs extends Specification {
     "parse three values across three columns" in {
       val input = "a,b,c\r\nr1c1,r1c2,r1c3\r\nr2c1,r2c2,r2c3\r\nr3c1,r3c2,r3c3\r\n"
       input must parseAs(
-        NestMap("a"), Str("r1c1"), Unnest,
-        NestMap("b"), Str("r1c2"), Unnest,
-        NestMap("c"), Str("r1c3"), Unnest, FinishRow,
-        NestMap("a"), Str("r2c1"), Unnest,
-        NestMap("b"), Str("r2c2"), Unnest,
-        NestMap("c"), Str("r2c3"), Unnest, FinishRow,
-        NestMap("a"), Str("r3c1"), Unnest,
-        NestMap("b"), Str("r3c2"), Unnest,
-        NestMap("c"), Str("r3c3"), Unnest, FinishRow)
+        NestMap("a"),
+        Str("r1c1"),
+        Unnest,
+        NestMap("b"),
+        Str("r1c2"),
+        Unnest,
+        NestMap("c"),
+        Str("r1c3"),
+        Unnest,
+        FinishRow,
+        NestMap("a"),
+        Str("r2c1"),
+        Unnest,
+        NestMap("b"),
+        Str("r2c2"),
+        Unnest,
+        NestMap("c"),
+        Str("r2c3"),
+        Unnest,
+        FinishRow,
+        NestMap("a"),
+        Str("r3c1"),
+        Unnest,
+        NestMap("b"),
+        Str("r3c2"),
+        Unnest,
+        NestMap("c"),
+        Str("r3c3"),
+        Unnest,
+        FinishRow
+      )
     }
 
     "allow \\r in values" in {
@@ -60,8 +78,13 @@ class ParserSpecs extends Specification {
 
     "consume record delimiter following a quoted value" in {
       "a,b\r\n\"fu,bar\",baz\r\n" must parseAs(
-        NestMap("a"), Str("fu,bar"), Unnest,
-        NestMap("b"), Str("baz"), Unnest, FinishRow)
+        NestMap("a"),
+        Str("fu,bar"),
+        Unnest,
+        NestMap("b"),
+        Str("baz"),
+        Unnest,
+        FinishRow)
     }
 
     "allow \" in quoted values with escaping" in {
@@ -73,15 +96,37 @@ class ParserSpecs extends Specification {
 
       val input = "r1c1,r1c2,r1c3\r\nr2c1,r2c2,r2c3\r\nr3c1,r3c2,r3c3\r\n"
       input must parseAs(
-        NestMap("A"), Str("r1c1"), Unnest,
-        NestMap("B"), Str("r1c2"), Unnest,
-        NestMap("C"), Str("r1c3"), Unnest, FinishRow,
-        NestMap("A"), Str("r2c1"), Unnest,
-        NestMap("B"), Str("r2c2"), Unnest,
-        NestMap("C"), Str("r2c3"), Unnest, FinishRow,
-        NestMap("A"), Str("r3c1"), Unnest,
-        NestMap("B"), Str("r3c2"), Unnest,
-        NestMap("C"), Str("r3c3"), Unnest, FinishRow)
+        NestMap("A"),
+        Str("r1c1"),
+        Unnest,
+        NestMap("B"),
+        Str("r1c2"),
+        Unnest,
+        NestMap("C"),
+        Str("r1c3"),
+        Unnest,
+        FinishRow,
+        NestMap("A"),
+        Str("r2c1"),
+        Unnest,
+        NestMap("B"),
+        Str("r2c2"),
+        Unnest,
+        NestMap("C"),
+        Str("r2c3"),
+        Unnest,
+        FinishRow,
+        NestMap("A"),
+        Str("r3c1"),
+        Unnest,
+        NestMap("B"),
+        Str("r3c2"),
+        Unnest,
+        NestMap("C"),
+        Str("r3c3"),
+        Unnest,
+        FinishRow
+      )
     }
 
     "infer a really really long header" in {
@@ -91,15 +136,67 @@ class ParserSpecs extends Specification {
 
       val input = (0 until 52).mkString(",") + "\r\n"
       val headers = List(
-        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-        "AA", "AB", "AC", "AD", "AE", "AF", "AG", "AH", "AI", "AJ", "AK", "AL", "AM", "AN", "AO", "AP", "AQ", "AR", "AS", "AT", "AU", "AV", "AW", "AX", "AY", "AZ")
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+        "AA",
+        "AB",
+        "AC",
+        "AD",
+        "AE",
+        "AF",
+        "AG",
+        "AH",
+        "AI",
+        "AJ",
+        "AK",
+        "AL",
+        "AM",
+        "AN",
+        "AO",
+        "AP",
+        "AQ",
+        "AR",
+        "AS",
+        "AT",
+        "AU",
+        "AV",
+        "AW",
+        "AX",
+        "AY",
+        "AZ"
+      )
 
       val generated = headers.zipWithIndex flatMap {
         case (header, i) =>
           List(NestMap(header), Str(i.toString), Unnest)
       }
 
-      (input + input) must parseAs(generated ::: List(FinishRow) ::: generated ::: List(FinishRow): _*)
+      (input + input) must parseAs(
+        generated ::: List(FinishRow) ::: generated ::: List(FinishRow): _*)
     }
 
     "parse a single value with a row ending in EOF" in {
@@ -108,8 +205,13 @@ class ParserSpecs extends Specification {
 
     "parse two values with a row ending in EOF" in {
       "abc,def\r\nfubar,baz" must parseAs(
-        NestMap("abc"), Str("fubar"), Unnest,
-        NestMap("def"), Str("baz"), Unnest, FinishRow)
+        NestMap("abc"),
+        Str("fubar"),
+        Unnest,
+        NestMap("def"),
+        Str("baz"),
+        Unnest,
+        FinishRow)
     }
 
     "parse a single value with an inferred header ending in EOF" in {
@@ -147,15 +249,37 @@ class ParserSpecs extends Specification {
     "parse three values across three columns" in {
       val input = "a,b,c\nr1c1,r1c2,r1c3\nr2c1,r2c2,r2c3\nr3c1,r3c2,r3c3\n"
       input must parseAs(
-        NestMap("a"), Str("r1c1"), Unnest,
-        NestMap("b"), Str("r1c2"), Unnest,
-        NestMap("c"), Str("r1c3"), Unnest, FinishRow,
-        NestMap("a"), Str("r2c1"), Unnest,
-        NestMap("b"), Str("r2c2"), Unnest,
-        NestMap("c"), Str("r2c3"), Unnest, FinishRow,
-        NestMap("a"), Str("r3c1"), Unnest,
-        NestMap("b"), Str("r3c2"), Unnest,
-        NestMap("c"), Str("r3c3"), Unnest, FinishRow)
+        NestMap("a"),
+        Str("r1c1"),
+        Unnest,
+        NestMap("b"),
+        Str("r1c2"),
+        Unnest,
+        NestMap("c"),
+        Str("r1c3"),
+        Unnest,
+        FinishRow,
+        NestMap("a"),
+        Str("r2c1"),
+        Unnest,
+        NestMap("b"),
+        Str("r2c2"),
+        Unnest,
+        NestMap("c"),
+        Str("r2c3"),
+        Unnest,
+        FinishRow,
+        NestMap("a"),
+        Str("r3c1"),
+        Unnest,
+        NestMap("b"),
+        Str("r3c2"),
+        Unnest,
+        NestMap("c"),
+        Str("r3c3"),
+        Unnest,
+        FinishRow
+      )
     }
 
     "infer headers when unspecified" in {
@@ -163,15 +287,37 @@ class ParserSpecs extends Specification {
 
       val input = "r1c1,r1c2,r1c3\nr2c1,r2c2,r2c3\nr3c1,r3c2,r3c3\n"
       input must parseAs(
-        NestMap("A"), Str("r1c1"), Unnest,
-        NestMap("B"), Str("r1c2"), Unnest,
-        NestMap("C"), Str("r1c3"), Unnest, FinishRow,
-        NestMap("A"), Str("r2c1"), Unnest,
-        NestMap("B"), Str("r2c2"), Unnest,
-        NestMap("C"), Str("r2c3"), Unnest, FinishRow,
-        NestMap("A"), Str("r3c1"), Unnest,
-        NestMap("B"), Str("r3c2"), Unnest,
-        NestMap("C"), Str("r3c3"), Unnest, FinishRow)
+        NestMap("A"),
+        Str("r1c1"),
+        Unnest,
+        NestMap("B"),
+        Str("r1c2"),
+        Unnest,
+        NestMap("C"),
+        Str("r1c3"),
+        Unnest,
+        FinishRow,
+        NestMap("A"),
+        Str("r2c1"),
+        Unnest,
+        NestMap("B"),
+        Str("r2c2"),
+        Unnest,
+        NestMap("C"),
+        Str("r2c3"),
+        Unnest,
+        FinishRow,
+        NestMap("A"),
+        Str("r3c1"),
+        Unnest,
+        NestMap("B"),
+        Str("r3c2"),
+        Unnest,
+        NestMap("C"),
+        Str("r3c3"),
+        Unnest,
+        FinishRow
+      )
     }
   }
 

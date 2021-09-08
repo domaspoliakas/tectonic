@@ -16,10 +16,6 @@
 
 package tectonic
 
-import scala.{Boolean, Int, Unit}
-
-import java.lang.CharSequence
-
 object NullPlate extends Plate[Unit] {
   def arr() = Signal.Continue
   def finishBatch(terminal: Boolean) = ()

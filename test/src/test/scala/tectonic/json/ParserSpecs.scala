@@ -17,20 +17,19 @@
 package tectonic
 package json
 
+import scala.collection.mutable
+import scala.util.Either
+import scala.util.Left
+import scala.util.Right
+
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
-
 import org.specs2.mutable.Specification
-
-import tectonic.test.{beComplete, Event, ReifiedTerminalPlate}
+import tectonic.test.Event
+import tectonic.test.ReifiedTerminalPlate
+import tectonic.test.beComplete
 import tectonic.test.json._
-
-import scala.{Array, Boolean, Byte, Int, List, Nil, Unit, Predef}, Predef._
-import scala.collection.mutable
-import scala.util.{Either, Left, Right}
-
-import java.lang.CharSequence
 
 class ParserSpecs extends Specification {
   import Event._
@@ -42,7 +41,15 @@ class ParserSpecs extends Specification {
     }
 
     "fail if a second byte-order mark appears" in {
-      val bytes = Array[Byte](0xef.toByte, 0xbb.toByte, 0xbf.toByte, '{'.toByte, 0xef.toByte, 0xbb.toByte, 0xbf.toByte, '}'.toByte)
+      val bytes = Array[Byte](
+        0xef.toByte,
+        0xbb.toByte,
+        0xbf.toByte,
+        '{'.toByte,
+        0xef.toByte,
+        0xbb.toByte,
+        0xbf.toByte,
+        '}'.toByte)
       bytes must failToParseWith(
         ParseException("expected \" got ￯ (line 1, column 5)", 4, 1, 5))
     }
@@ -146,26 +153,29 @@ class ParserSpecs extends Specification {
     "call finishBatch with false, and then true on complete value" in {
       val calls = new mutable.ListBuffer[Boolean]
 
-      val parser = Parser(IO(new Plate[Unit] {
-        def nul(): Signal = Signal.Continue
-        def fls(): Signal = Signal.Continue
-        def tru(): Signal = Signal.Continue
-        def map(): Signal = Signal.Continue
-        def arr(): Signal = Signal.Continue
-        def num(s: CharSequence, decIdx: Int, expIdx: Int): Signal = Signal.Continue
-        def str(s: CharSequence): Signal = Signal.Continue
+      val parser = Parser(
+        IO(new Plate[Unit] {
+          def nul(): Signal = Signal.Continue
+          def fls(): Signal = Signal.Continue
+          def tru(): Signal = Signal.Continue
+          def map(): Signal = Signal.Continue
+          def arr(): Signal = Signal.Continue
+          def num(s: CharSequence, decIdx: Int, expIdx: Int): Signal = Signal.Continue
+          def str(s: CharSequence): Signal = Signal.Continue
 
-        def nestMap(pathComponent: CharSequence): Signal = Signal.Continue
-        def nestArr(): Signal = Signal.Continue
-        def nestMeta(pathComponent: CharSequence): Signal = Signal.Continue
+          def nestMap(pathComponent: CharSequence): Signal = Signal.Continue
+          def nestArr(): Signal = Signal.Continue
+          def nestMeta(pathComponent: CharSequence): Signal = Signal.Continue
 
-        def unnest(): Signal = Signal.Continue
+          def unnest(): Signal = Signal.Continue
 
-        def finishRow(): Unit = ()
-        def finishBatch(terminal: Boolean): Unit = calls += terminal
+          def finishRow(): Unit = ()
+          def finishBatch(terminal: Boolean): Unit = calls += terminal
 
-        def skipped(bytes: Int) = ()
-      }), Parser.ValueStream).unsafeRunSync()
+          def skipped(bytes: Int) = ()
+        }),
+        Parser.ValueStream
+      ).unsafeRunSync()
 
       parser.absorb("42").unsafeRunSync() must beComplete(())
       calls.toList mustEqual List(false)
@@ -177,26 +187,29 @@ class ParserSpecs extends Specification {
     "call finishBatch with false, and then true on incomplete value" in {
       val calls = new mutable.ListBuffer[Boolean]
 
-      val parser = Parser(IO(new Plate[Unit] {
-        def nul(): Signal = Signal.Continue
-        def fls(): Signal = Signal.Continue
-        def tru(): Signal = Signal.Continue
-        def map(): Signal = Signal.Continue
-        def arr(): Signal = Signal.Continue
-        def num(s: CharSequence, decIdx: Int, expIdx: Int): Signal = Signal.Continue
-        def str(s: CharSequence): Signal = Signal.Continue
+      val parser = Parser(
+        IO(new Plate[Unit] {
+          def nul(): Signal = Signal.Continue
+          def fls(): Signal = Signal.Continue
+          def tru(): Signal = Signal.Continue
+          def map(): Signal = Signal.Continue
+          def arr(): Signal = Signal.Continue
+          def num(s: CharSequence, decIdx: Int, expIdx: Int): Signal = Signal.Continue
+          def str(s: CharSequence): Signal = Signal.Continue
 
-        def nestMap(pathComponent: CharSequence): Signal = Signal.Continue
-        def nestArr(): Signal = Signal.Continue
-        def nestMeta(pathComponent: CharSequence): Signal = Signal.Continue
+          def nestMap(pathComponent: CharSequence): Signal = Signal.Continue
+          def nestArr(): Signal = Signal.Continue
+          def nestMeta(pathComponent: CharSequence): Signal = Signal.Continue
 
-        def unnest(): Signal = Signal.Continue
+          def unnest(): Signal = Signal.Continue
 
-        def finishRow(): Unit = ()
-        def finishBatch(terminal: Boolean): Unit = calls += terminal
+          def finishRow(): Unit = ()
+          def finishBatch(terminal: Boolean): Unit = calls += terminal
 
-        def skipped(bytes: Int) = ()
-      }), Parser.ValueStream).unsafeRunSync()
+          def skipped(bytes: Int) = ()
+        }),
+        Parser.ValueStream
+      ).unsafeRunSync()
 
       parser.absorb("\"h").unsafeRunSync() must beComplete(())
       calls.toList mustEqual List(false)
@@ -272,43 +285,44 @@ class ParserSpecs extends Specification {
   }
 
   "column skips on nest" should {
-    def targetMask[A](target: Either[Int, String])(delegate: Plate[A]): Plate[A] = new DelegatingPlate[A](delegate) {
-      private[this] var depth = 0
-      private[this] var index = 0
+    def targetMask[A](target: Either[Int, String])(delegate: Plate[A]): Plate[A] =
+      new DelegatingPlate[A](delegate) {
+        private[this] var depth = 0
+        private[this] var index = 0
 
-      override def nestMap(pathComponent: CharSequence): Signal = {
-        if (Right(pathComponent.toString) == target && depth == 0) {
-          super.nestMap(pathComponent)
-        } else {
-          depth += 1
-          Signal.SkipColumn
-        }
-      }
-
-      override def nestArr(): Signal = {
-        if (depth == 0) {
-          index += 1
-          if (Left(index - 1) == target) {
-            super.nestArr()
+        override def nestMap(pathComponent: CharSequence): Signal = {
+          if (Right(pathComponent.toString) == target && depth == 0) {
+            super.nestMap(pathComponent)
           } else {
             depth += 1
             Signal.SkipColumn
           }
-        } else {
-          depth += 1
-          Signal.SkipColumn
         }
-      }
 
-      override def unnest(): Signal = {
-        if (depth == 0) {
-          super.unnest()
-        } else {
-          depth -= 1
-          Signal.Continue
+        override def nestArr(): Signal = {
+          if (depth == 0) {
+            index += 1
+            if (Left(index - 1) == target) {
+              super.nestArr()
+            } else {
+              depth += 1
+              Signal.SkipColumn
+            }
+          } else {
+            depth += 1
+            Signal.SkipColumn
+          }
+        }
+
+        override def unnest(): Signal = {
+          if (depth == 0) {
+            super.unnest()
+          } else {
+            depth -= 1
+            Signal.Continue
+          }
         }
       }
-    }
 
     "skip .a and .c in { a: ..., b: ..., c: ... }" in {
       val input = """{ "a": 42, "b": "hi", "c": true }"""
@@ -324,7 +338,8 @@ class ParserSpecs extends Specification {
 
     "retain only [1] in [..., ..., ..., ...]" in {
       val input = """[42, "hi", true, null]"""
-      val expected = List(Skipped(2), NestArr, Str("hi"), Unnest, Skipped(5), Skipped(5), FinishRow)
+      val expected =
+        List(Skipped(2), NestArr, Str("hi"), Unnest, Skipped(5), Skipped(5), FinishRow)
       input must parseAsWithPlate(expected: _*)(targetMask[List[Event]](Left(1)))
     }
 
@@ -344,12 +359,7 @@ class ParserSpecs extends Specification {
       val input1 = """{ "a": 4"""
       val input2 = """2, "b": "hi" }"""
 
-      val expected = List(
-        Skipped(1),
-        NestMap("b"),
-        Str("hi"),
-        Unnest,
-        FinishRow)
+      val expected = List(Skipped(1), NestMap("b"), Str("hi"), Unnest, FinishRow)
 
       val eff = for {
         parser <- Parser(
@@ -503,7 +513,8 @@ class ParserSpecs extends Specification {
         ParseResult.Partial(List(NestMap("foo")), 5),
         ParseResult.Partial(List(Arr), 2),
         ParseResult.Partial(List(Unnest), 1),
-        ParseResult.Complete(List(Unnest, FinishRow)))
+        ParseResult.Complete(List(Unnest, FinishRow))
+      )
     }
   }
 }

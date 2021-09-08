@@ -17,18 +17,10 @@
 package tectonic
 package test
 
-import cats.effect.Sync
-
-import scala.{Array, Boolean, Int, List, Nil, Unit}
 import scala.collection.mutable
 
-import java.lang.{CharSequence, SuppressWarnings}
+import cats.effect.Sync
 
-@SuppressWarnings(
-  Array(
-    "org.wartremover.warts.NonUnitStatements",
-    "org.wartremover.warts.Var",
-    "org.wartremover.warts.TraversableOps"))
 final class ReifiedTerminalPlate private (accumToTerminal: Boolean) extends Plate[List[Event]] {
   import Event._
 
@@ -110,11 +102,13 @@ final class ReifiedTerminalPlate private (accumToTerminal: Boolean) extends Plat
 
 object ReifiedTerminalPlate {
 
-  @SuppressWarnings(Array("org.wartremover.warts.DefaultArguments"))
   def apply[F[_]: Sync](accumToTerminal: Boolean = true): F[Plate[List[Event]]] =
     Sync[F].delay(new ReifiedTerminalPlate(accumToTerminal))
 
-  def visit[F[_]: Sync, A](events: List[Event], plate: Plate[A], terminus: Boolean = true): F[A] = Sync[F] delay {
+  def visit[F[_]: Sync, A](
+      events: List[Event],
+      plate: Plate[A],
+      terminus: Boolean = true): F[A] = Sync[F] delay {
     events foreach {
       case Event.Nul => plate.nul()
       case Event.Fls => plate.fls()

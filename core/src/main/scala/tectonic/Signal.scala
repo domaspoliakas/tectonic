@@ -16,8 +16,6 @@
 
 package tectonic
 
-import scala.Int
-
 sealed abstract class Signal(final val ordinal: Int)
 
 object Signal {

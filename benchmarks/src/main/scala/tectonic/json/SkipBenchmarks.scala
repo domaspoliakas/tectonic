@@ -17,21 +17,25 @@
 package tectonic
 package json
 
-import cats.effect.{IO, Sync}
-import cats.effect.unsafe.implicits.global
+import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
+import scala.annotation.nowarn
+import scala.collection.immutable.List
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
-
-import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit, Param, Scope, State}
+import cats.effect.IO
+import cats.effect.Sync
+import cats.effect.unsafe.implicits.global
+import org.openjdk.jmh.annotations.Benchmark
+import org.openjdk.jmh.annotations.BenchmarkMode
+import org.openjdk.jmh.annotations.Mode
+import org.openjdk.jmh.annotations.OutputTimeUnit
+import org.openjdk.jmh.annotations.Param
+import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
-
 import tectonic.fs2.StreamParser
-
-import scala.collection.immutable.List
-
-import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -50,6 +54,7 @@ class SkipBenchmarks {
 
   // includes the cost of file IO; not sure if that's a good thing?
   @Benchmark
+  @nowarn("cat=unused-params")
   def projectBarKeyFromUgh10k(bh: Blackhole): Unit = {
     val plateF = for {
       terminal <- BlackholePlate[IO](
@@ -63,9 +68,7 @@ class SkipBenchmarks {
       back <- ProjectionPlate[IO, List[Nothing]](terminal, "bar", enableSkips)
     } yield back
 
-    val contents = Files[IO].readAll(
-      ResourceDir.resolve("ugh10k.json"),
-      ChunkSize)
+    val contents = Files[IO].readAll(ResourceDir.resolve("ugh10k.json"), ChunkSize)
 
     val parser = StreamParser(Parser(plateF, Parser.UnwrapArray))(_ => Chunk.empty[Nothing])
 
@@ -107,6 +110,9 @@ private[json] final class ProjectionPlate[A] private (
 }
 
 private[json] object ProjectionPlate {
-  def apply[F[_]: Sync, A](delegate: Plate[A], field: String, enableSkips: Boolean): F[Plate[A]] =
+  def apply[F[_]: Sync, A](
+      delegate: Plate[A],
+      field: String,
+      enableSkips: Boolean): F[Plate[A]] =
     Sync[F].delay(new ProjectionPlate(delegate, field, enableSkips))
 }

@@ -17,9 +17,11 @@
 package tectonic
 package test
 
-import tectonic.Signal.{Continue, SkipColumn, SkipRow, Terminate}
-
 import org.specs2.mutable.Specification
+import tectonic.Signal.Continue
+import tectonic.Signal.SkipColumn
+import tectonic.Signal.SkipRow
+import tectonic.Signal.Terminate
 
 class SignalSpecs extends Specification {
 

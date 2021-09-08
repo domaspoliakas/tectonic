@@ -16,16 +16,17 @@
 
 package tectonic.json
 
-import org.typelevel.jawn.{Facade, FContext}
-
 import org.openjdk.jmh.infra.Blackhole
+import org.typelevel.jawn.FContext
+import org.typelevel.jawn.Facade
 
 final class BlackholeFacade(
     vectorAddCost: Long,
     vectorFinalCost: Long,
     scalarCost: Long,
     tinyScalarCost: Long,
-    numericCost: Long) extends Facade.NoIndexFacade[Unit] {
+    numericCost: Long)
+    extends Facade.NoIndexFacade[Unit] {
 
   import Blackhole.consumeCPU
 

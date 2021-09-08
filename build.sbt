@@ -6,20 +6,17 @@ ThisBuild / githubRepository := "tectonic"
 
 homepage in ThisBuild := Some(url("https://github.com/precog/tectonic"))
 
-scmInfo in ThisBuild := Some(ScmInfo(
-  url("https://github.com/precog/tectonic"),
-  "scm:git@github.com:precog/tectonic.git"))
+scmInfo in ThisBuild := Some(
+  ScmInfo(url("https://github.com/precog/tectonic"), "scm:git@github.com:precog/tectonic.git"))
 
 val Fs2Version = "3.0.6"
-
 
 ThisBuild / publishAsOSSProject := true
 
 val commonOverrides = Seq(githubRepository := "tectonic")
 
 // Include to also publish a project's tests
-lazy val publishTestsSettings = Seq(
-  publishArtifact in (Test, packageBin) := true)
+lazy val publishTestsSettings = Seq(publishArtifact in (Test, packageBin) := true)
 
 lazy val root = project
   .in(file("."))
@@ -37,24 +34,19 @@ lazy val core = project
 
 lazy val fs2 = project
   .in(file("fs2"))
-  .dependsOn(
-    core,
-    test % "test->test")
+  .dependsOn(core, test % "test->test")
   .settings(commonOverrides)
   .settings(name := "tectonic-fs2")
-  .settings(
-    libraryDependencies += "co.fs2" %% "fs2-core" % Fs2Version)
+  .settings(libraryDependencies += "co.fs2" %% "fs2-core" % Fs2Version)
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val harness = project
   .in(file("harness"))
-  .dependsOn(
-    fs2)
+  .dependsOn(fs2)
   .settings(commonOverrides)
   .settings(name := "tectonic-harness")
-  .settings(noPublishSettings)    // mostly for internal testing
-  .settings(
-    libraryDependencies += "co.fs2" %% "fs2-io" % Fs2Version)
+  .settings(noPublishSettings) // mostly for internal testing
+  .settings(libraryDependencies += "co.fs2" %% "fs2-io" % Fs2Version)
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val test = project
@@ -66,8 +58,8 @@ lazy val test = project
     libraryDependencies ++= Seq(
       "org.specs2" %% "specs2-core" % "4.10.6",
       "org.scalacheck" %% "scalacheck" % "1.15.4"),
-
-    libraryDependencies += "org.specs2" %% "specs2-scalacheck" % "4.10.6" % Test)
+    libraryDependencies += "org.specs2" %% "specs2-scalacheck" % "4.10.6" % Test
+  )
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val benchmarks = project
@@ -81,32 +73,31 @@ lazy val benchmarks = project
     javaOptions += "-XX:+HeapDumpOnOutOfMemoryError",
     javaOptions += s"-Dproject.resource.dir=${(Compile / resourceDirectory).value}",
     javaOptions += s"-Dproject.managed.resource.dir=${(Jmh / resourceManaged).value}",
-
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % Fs2Version,
-      "co.fs2" %% "fs2-io"   % Fs2Version,
-
-      "org.http4s" %% "jawn-fs2" % "1.1.3"))
-  .settings(    // magic rewiring so sbt-jmh works sanely
+      "co.fs2" %% "fs2-io" % Fs2Version,
+      "org.http4s" %% "jawn-fs2" % "1.1.3")
+  )
+  .settings( // magic rewiring so sbt-jmh works sanely
     Jmh / sourceDirectory := (Compile / sourceDirectory).value,
     Jmh / classDirectory := (Compile / classDirectory).value,
     Jmh / dependencyClasspath := (Compile / dependencyClasspath).value,
     Jmh / compile := (Jmh / compile).dependsOn(Compile / compile).value,
-    Jmh / run := (Jmh / run).dependsOn(Jmh / compile).evaluated)
-  .settings(
-    Jmh / resourceGenerators += Def.task {
-      import scala.sys.process._
+    Jmh / run := (Jmh / run).dependsOn(Jmh / compile).evaluated
+  )
+  .settings(Jmh / resourceGenerators += Def.task {
+    import scala.sys.process._
 
-      val targetDir = (Jmh / resourceManaged).value
-      val targetFile = targetDir / "worldcitiespop.txt"
+    val targetDir = (Jmh / resourceManaged).value
+    val targetFile = targetDir / "worldcitiespop.txt"
 
-      if (!targetFile.exists()) {
-        // the original source took it offline, so now it's in my dropbox 🤷‍♂️
-        s"curl -L -o $targetDir/worldcitiespop.txt.gz https://www.dropbox.com/s/8tfbn4a7x2tam4n/worldcitiespop.txt.gz?dl=1".!!
-        s"gunzip $targetDir/worldcitiespop.txt.gz".!!
-      }
+    if (!targetFile.exists()) {
+      // the original source took it offline, so now it's in my dropbox 🤷‍♂️
+      s"curl -L -o $targetDir/worldcitiespop.txt.gz https://www.dropbox.com/s/8tfbn4a7x2tam4n/worldcitiespop.txt.gz?dl=1".!!
+      s"gunzip $targetDir/worldcitiespop.txt.gz".!!
+    }
 
-      Seq(targetFile)
-    }.taskValue)
+    Seq(targetFile)
+  }.taskValue)
   .enablePlugins(AutomateHeaderPlugin)
   .enablePlugins(JmhPlugin)

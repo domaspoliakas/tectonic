@@ -16,10 +16,6 @@
 
 package tectonic
 
-import java.lang.CharSequence
-
-import scala.{Boolean, Int, Unit}
-
 abstract class DelegatingPlate[A](val delegate: Plate[A]) extends Plate[A] {
 
   def nul(): Signal =

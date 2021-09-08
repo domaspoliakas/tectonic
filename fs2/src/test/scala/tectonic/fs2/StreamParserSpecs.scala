@@ -17,23 +17,19 @@
 package tectonic
 package fs2
 
+import java.nio.ByteBuffer
+
+import _root_.fs2.Chunk
+import _root_.fs2.Pipe
+import _root_.fs2.Stream
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.instances.list._
-
-import _root_.fs2.{Chunk, Pipe, Stream}
-
-import tectonic.json.Parser
-import tectonic.test.{Event, ReifiedTerminalPlate}
-
 import org.specs2.mutable.Specification
-
 import scodec.bits.ByteVector
-
-import scala.{Boolean, Byte, Int, List, Unit}
-
-import java.lang.CharSequence
-import java.nio.ByteBuffer
+import tectonic.json.Parser
+import tectonic.test.Event
+import tectonic.test.ReifiedTerminalPlate
 
 class StreamParserSpecs extends Specification {
   import Event._
@@ -87,9 +83,9 @@ class StreamParserSpecs extends Specification {
     }
 
     "parse two values from a split bytevector chunk" in {
-      val input = 
-        Stream.chunk(Chunk.byteVector(
-          ByteVector.view(ByteBuffer.wrap("456 ".getBytes)) ++
+      val input =
+        Stream.chunk(
+          Chunk.byteVector(ByteVector.view(ByteBuffer.wrap("456 ".getBytes)) ++
             ByteVector.view(ByteBuffer.wrap("true".getBytes))))
 
       val results = input.through(parser)

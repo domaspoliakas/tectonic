@@ -17,10 +17,6 @@
 package tectonic
 package test
 
-import scala.{Int, Product, Serializable}
-
-import java.lang.CharSequence
-
 sealed trait Event extends Product with Serializable
 
 object Event {

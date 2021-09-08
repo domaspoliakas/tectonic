@@ -17,23 +17,25 @@
 package tectonic
 package json
 
-import cats.effect.IO
-import cats.effect.unsafe.implicits.global
+import java.nio.file.Paths
+import java.util.concurrent.TimeUnit
+import scala.annotation.nowarn
+import scala.collection.immutable.List
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
-
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import jawnfs2._
-
-import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit, Param, Scope, State}
+import org.openjdk.jmh.annotations.Benchmark
+import org.openjdk.jmh.annotations.BenchmarkMode
+import org.openjdk.jmh.annotations.Mode
+import org.openjdk.jmh.annotations.OutputTimeUnit
+import org.openjdk.jmh.annotations.Param
+import org.openjdk.jmh.annotations.Scope
+import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
-
 import tectonic.fs2.StreamParser
-
-import scala.collection.immutable.List
-
-import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @BenchmarkMode(Array(Mode.AverageTime))
@@ -54,22 +56,25 @@ class ParserBenchmarks {
   @Param(Array("tectonic", "jawn"))
   var framework: String = _
 
-  @Param(Array(
-    "bar (not wrapped)",
-    "bla2 (not wrapped)",
-    "bla25 (wrapped)",
-    "countries.geo (not wrapped)",
-    "dkw-sample (not wrapped)",
-    "foo (wrapped)",
-    "qux1 (not wrapped)",
-    "qux2 (not wrapped)",
-    "ugh10k (wrapped)"))
+  @Param(
+    Array(
+      "bar (not wrapped)",
+      "bla2 (not wrapped)",
+      "bla25 (wrapped)",
+      "countries.geo (not wrapped)",
+      "dkw-sample (not wrapped)",
+      "foo (wrapped)",
+      "qux1 (not wrapped)",
+      "qux2 (not wrapped)",
+      "ugh10k (wrapped)"
+    ))
   var input: String = _
 
   // benchmarks
 
   // includes the cost of file IO; not sure if that's a good thing?
   @Benchmark
+  @nowarn("cat=unused-params")
   def parseThroughFs2(bh: Blackhole): Unit = {
     val modeStart = input.indexOf('(')
     val inputMode = input.substring(modeStart + 1, input.length - 1) == "wrapped"
@@ -90,13 +95,12 @@ class ParserBenchmarks {
       Jawn.TinyScalarCost,
       NumericCost)
 
-    val contents = Files[IO].readAll(
-      ResourceDir.resolve(inputFile + ".json"),
-      ChunkSize)
+    val contents = Files[IO].readAll(ResourceDir.resolve(inputFile + ".json"), ChunkSize)
 
     val processed = if (framework == TectonicFramework) {
       val mode = if (inputMode) Parser.UnwrapArray else Parser.ValueStream
-      val parser = StreamParser(Parser(plateF, mode): IO[BaseParser[IO, List[Nothing]]])(_ => Chunk.empty[Nothing])
+      val parser = StreamParser(Parser(plateF, mode): IO[BaseParser[IO, List[Nothing]]])(_ =>
+        Chunk.empty[Nothing])
       contents.through(parser)
     } else {
       if (inputMode)

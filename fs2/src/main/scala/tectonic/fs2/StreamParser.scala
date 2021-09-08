@@ -17,49 +17,56 @@
 package tectonic
 package fs2
 
+import scala.collection.mutable
+
+import _root_.fs2.Chunk
+import _root_.fs2.Pipe
+import _root_.fs2.Pull
+import _root_.fs2.Stream
 import cats.Foldable
 import cats.effect.Sync
 import cats.implicits._
 
-import _root_.fs2.{Chunk, Pipe, Pull, Stream}
-
-import scala.{Byte, Int, None, Option, Some, Unit}
-import scala.collection.mutable
-
 object StreamParser {
 
   /**
-   * Returns a transducer which parses a byte stream according to the specified
-   * parser, which may be constructed effectfully. Any parse errors will be sequenced
-   * into the stream as a `tectonic.ParseException`, halting consumption.
+   * Returns a transducer which parses a byte stream according to the specified parser, which
+   * may be constructed effectfully. Any parse errors will be sequenced into the stream as a
+   * `tectonic.ParseException`, halting consumption.
    */
-  def apply[F[_]: Sync, A, B](
-      parserF: F[BaseParser[F, A]])(
-      chunk: A => Chunk[B])
-      : Pipe[F, Byte, B] = { in =>
+  def apply[F[_]: Sync, A, B](parserF: F[BaseParser[F, A]])(
+      chunk: A => Chunk[B]): Pipe[F, Byte, B] = { in =>
+    def handleResult[R](pr: ParseResult[A])(next: Int => Pull[F, B, R]): Pull[F, B, R] =
+      pr match {
+        case ParseResult.Failure(e) =>
+          Pull.raiseError[F](e)
 
-    def handleResult[R](pr: ParseResult[A])(next: Int => Pull[F, B, R]): Pull[F, B, R] = pr match {
-      case ParseResult.Failure(e) =>
-        Pull.raiseError[F](e)
+        case ParseResult.Partial(a, remaining2) =>
+          Pull.output(chunk(a)) >> next(remaining2)
 
-      case ParseResult.Partial(a, remaining2) =>
-        Pull.output(chunk(a)) >> next(remaining2)
+        case ParseResult.Complete(a) =>
+          Pull.output(chunk(a)) >> next(0)
+      }
 
-      case ParseResult.Complete(a) =>
-        Pull.output(chunk(a)) >> next(0)
-    }
-
-    def loop(in: Stream[F, Byte], parser: BaseParser[F, A], remaining: Int, last: Option[Int]): Pull[F, B, Unit] = {
+    def loop(
+        in: Stream[F, Byte],
+        parser: BaseParser[F, A],
+        remaining: Int,
+        last: Option[Int]): Pull[F, B, Unit] = {
       // if we successfully consumed less than half of our previous chunk, don't pull the next one: just re-churn
       if (last.map(_ / 2 < remaining).getOrElse(false)) {
         Pull.eval(parser.continue).flatMap(handleResult(_)(loop(in, parser, _, last)))
       } else {
         in.pull.uncons flatMap {
           case Some((chunk: Chunk.ByteBuffer, tail)) =>
-            Pull.eval(parser.absorb(chunk.buf)).flatMap(handleResult(_)(loop(tail, parser, _, Some(chunk.size))))
+            Pull
+              .eval(parser.absorb(chunk.buf))
+              .flatMap(handleResult(_)(loop(tail, parser, _, Some(chunk.size))))
 
           case Some((chunk, tail)) =>
-            Pull.eval(parser.absorb(chunk.toByteBuffer)).flatMap(handleResult(_)(loop(tail, parser, _, Some(chunk.size))))
+            Pull
+              .eval(parser.absorb(chunk.toByteBuffer))
+              .flatMap(handleResult(_)(loop(tail, parser, _, Some(chunk.size))))
 
           case None =>
             Pull.done
@@ -69,7 +76,9 @@ object StreamParser {
 
     val pull = Pull.eval(parserF) flatMap { parser =>
       lazy val finishF: Pull[F, B, Unit] =
-        Pull.eval(parser.finish).flatMap(handleResult(_)(rem => if (rem <= 0) Pull.done else finishF))
+        Pull
+          .eval(parser.finish)
+          .flatMap(handleResult(_)(rem => if (rem <= 0) Pull.done else finishF))
 
       loop(in, parser, 0, None) >> finishF
     }
@@ -77,6 +86,7 @@ object StreamParser {
     pull.stream
   }
 
-  def foldable[F[_]: Sync, G[_]: Foldable, A](parserF: F[BaseParser[F, G[A]]]): Pipe[F, Byte, A] =
+  def foldable[F[_]: Sync, G[_]: Foldable, A](
+      parserF: F[BaseParser[F, G[A]]]): Pipe[F, Byte, A] =
     apply(parserF)(ga => Chunk.buffer(ga.foldLeft(new mutable.ArrayBuffer[A])(_ += _)))
 }

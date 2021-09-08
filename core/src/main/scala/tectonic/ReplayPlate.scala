@@ -18,15 +18,11 @@ package tectonic
 
 import cats.effect.Sync
 
-import scala.{Array, Boolean, Int, Long, None, Option, Some, StringContext, Unit}
-
-import java.lang.{CharSequence, IllegalStateException, System}
-
 /**
  * Produces None until finishBatch(true) is called.
  */
 final class ReplayPlate private (
-    limit: Int,   // never grow the tag buffer size beyond this point
+    limit: Int, // never grow the tag buffer size beyond this point
     retainSkips: Boolean)
     extends Plate[Option[EventCursor]] {
 

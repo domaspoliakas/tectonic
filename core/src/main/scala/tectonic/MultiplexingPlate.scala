@@ -16,12 +16,7 @@
 
 package tectonic
 
-import scala._
-
-import java.lang.CharSequence
-
-class MultiplexingPlate[A](main: Plate[A], side: Plate[Unit])
-    extends Plate[A] {
+class MultiplexingPlate[A](main: Plate[A], side: Plate[Unit]) extends Plate[A] {
 
   private[this] val sig = Signal
 
@@ -41,9 +36,7 @@ class MultiplexingPlate[A](main: Plate[A], side: Plate[Unit])
     sig.and(side.nul(), main.nul())
 
   def num(s: CharSequence, decIdx: Int, expIdx: Int): Signal =
-    sig.and(
-      side.num(s, decIdx, expIdx),
-      main.num(s, decIdx, expIdx))
+    sig.and(side.num(s, decIdx, expIdx), main.num(s, decIdx, expIdx))
 
   def str(s: CharSequence): Signal =
     sig.and(side.str(s), main.str(s))
@@ -52,14 +45,10 @@ class MultiplexingPlate[A](main: Plate[A], side: Plate[Unit])
     sig.and(side.nestArr(), main.nestArr())
 
   def nestMap(pathComponent: CharSequence): Signal =
-    sig.and(
-      side.nestMap(pathComponent),
-      main.nestMap(pathComponent))
+    sig.and(side.nestMap(pathComponent), main.nestMap(pathComponent))
 
   def nestMeta(pathComponent: CharSequence): Signal =
-    sig.and(
-      side.nestMeta(pathComponent),
-      main.nestMeta(pathComponent))
+    sig.and(side.nestMeta(pathComponent), main.nestMeta(pathComponent))
 
   def unnest(): Signal =
     sig.and(side.unnest(), main.unnest())

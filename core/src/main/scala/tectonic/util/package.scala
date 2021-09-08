@@ -42,41 +42,28 @@ package tectonic
  * kDEALINGS IN THE SOFTWARE.
  */
 
-import scala.{Array, Int, Long}
-
-import java.lang.{CharSequence, SuppressWarnings}
-
 package object util {
 
   /**
-   * Any strings under this length which parse as numbers that lack
-   * decimals or exponents may be safely consumed using parseLongUnsafe.
+   * Any strings under this length which parse as numbers that lack decimals or exponents may be
+   * safely consumed using parseLongUnsafe.
    */
   val MaxSafeLongLength: Int = Long.MaxValue.toString.length - 1
 
   /**
-   * Parse the given character sequence as a single Long value (64-bit
-   * signed integer) in decimal (base-10).
+   * Parse the given character sequence as a single Long value (64-bit signed integer) in
+   * decimal (base-10).
    *
-   * Other than "0", leading zeros are not allowed, nor are leading
-   * plusses. At most one leading minus is allowed. The value "-0" is
-   * allowed, and is interpreted as 0.
+   * Other than "0", leading zeros are not allowed, nor are leading plusses. At most one leading
+   * minus is allowed. The value "-0" is allowed, and is interpreted as 0.
    *
    * Stated more precisely, accepted values:
    *
    *   - conform to the pattern: -?(0|([1-9][0-9]*))
    *   - are within [-9223372036854775808, 9223372036854775807]
    *
-   * This method will throw an `InvalidLong` exception on invalid
-   * input.
+   * This method will throw an `InvalidLong` exception on invalid input.
    */
-  @SuppressWarnings(
-    Array(
-      "org.wartremover.warts.Var",
-      "org.wartremover.warts.While",
-      "org.wartremover.warts.ToString",
-      "org.wartremover.warts.Throw",
-      "org.wartremover.warts.Equals"))
   def parseLong(cs: CharSequence): Long = {
 
     // we store the inverse of the positive sum, to ensure we don't
@@ -113,30 +100,20 @@ package object util {
   }
 
   /**
-   * Parse the given character sequence as a single Long value (64-bit
-   * signed integer) in decimal (base-10).
+   * Parse the given character sequence as a single Long value (64-bit signed integer) in
+   * decimal (base-10).
    *
-   * For valid inputs, this method produces the same values as
-   * `parseLong`. However, by avoiding input validation it is up to
-   * 50% faster.
+   * For valid inputs, this method produces the same values as `parseLong`. However, by avoiding
+   * input validation it is up to 50% faster.
    *
-   * For inputs which `parseLong` throws an error on,
-   * `parseLongUnsafe` may (or may not) throw an error, or return a
-   * bogus value. This method makes no guarantees about how it handles
+   * For inputs which `parseLong` throws an error on, `parseLongUnsafe` may (or may not) throw
+   * an error, or return a bogus value. This method makes no guarantees about how it handles
    * invalid input.
    *
-   * This method should only be used on sequences which have already
-   * been parsed (e.g. by a Jawn parser). When in doubt, use
-   * `parseLong(cs)`, which is still significantly faster than
+   * This method should only be used on sequences which have already been parsed (e.g. by a Jawn
+   * parser). When in doubt, use `parseLong(cs)`, which is still significantly faster than
    * `java.lang.Long.parseLong(cs.toString)`.
    */
-  @SuppressWarnings(
-    Array(
-      "org.wartremover.warts.Var",
-      "org.wartremover.warts.While",
-      "org.wartremover.warts.ToString",
-      "org.wartremover.warts.Throw",
-      "org.wartremover.warts.Equals"))
   def parseLongUnsafe(cs: CharSequence): Long = {
 
     // we store the inverse of the positive sum, to ensure we don't

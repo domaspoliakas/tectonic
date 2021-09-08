@@ -16,19 +16,19 @@
 
 package tectonic.harness
 
-import cats.effect.{IO, Sync}
-import cats.instances.long._
-
-import fs2.{Chunk, Pipe}
-import fs2.io.file.Files
-
-import tectonic.{csv, json, Plate, Signal}
-import tectonic.fs2.StreamParser
-
-import scala.{Array, Boolean, Byte, Int, Long, Unit}
-
-import java.lang.{CharSequence, SuppressWarnings}
 import java.nio.file.Path
+
+import cats.effect.IO
+import cats.effect.Sync
+import cats.instances.long._
+import fs2.Chunk
+import fs2.Pipe
+import fs2.io.file.Files
+import tectonic.Plate
+import tectonic.Signal
+import tectonic.csv
+import tectonic.fs2.StreamParser
+import tectonic.json
 
 object RowCountHarness {
 
@@ -39,18 +39,22 @@ object RowCountHarness {
     StreamParser(csv.Parser(RowCountPlate[IO], config))(Chunk.singleton(_))
 
   def rowCountJson(file: Path, mode: json.Parser.Mode): IO[Long] = {
-    Files[IO].readAll(file, 16384)
+    Files[IO]
+      .readAll(file, 16384)
       .through(jsonParser(mode))
       .foldMonoid
-      .compile.last
+      .compile
+      .last
       .map(_.getOrElse(0L))
   }
 
   def rowCountCsv(file: Path, config: csv.Parser.Config): IO[Long] = {
-    Files[IO].readAll(file, 16384)
+    Files[IO]
+      .readAll(file, 16384)
       .through(csvParser(config))
       .foldMonoid
-      .compile.last
+      .compile
+      .last
       .map(_.getOrElse(0L))
   }
 
@@ -58,7 +62,6 @@ object RowCountHarness {
     def apply[F[_]: Sync]: F[Plate[Long]] = {
       Sync[F] delay {
         new Plate[Long] {
-          @SuppressWarnings(Array("org.wartremover.warts.Var"))
           private var count: Long = 0
 
           def nul(): Signal = Signal.Continue

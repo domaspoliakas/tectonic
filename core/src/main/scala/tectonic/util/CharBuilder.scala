@@ -43,17 +43,12 @@ package util
  * DEALINGS IN THE SOFTWARE.
  */
 
-import scala.{inline, sys, Array, Char, Int, Unit}
-
-import java.lang.{CharSequence, String, SuppressWarnings, System}
-
 /**
  * CharBuilder is a specialized way to build Strings.
  *
- * It wraps a (growable) array of characters, and can accept
- * additional String or Char data to be added to its buffer.
+ * It wraps a (growable) array of characters, and can accept additional String or Char data to
+ * be added to its buffer.
  */
-@SuppressWarnings(Array("org.wartremover.warts.Var"))
 private[tectonic] final class CharBuilder {
   @inline final def INITIALSIZE = 32
 
@@ -68,10 +63,6 @@ private[tectonic] final class CharBuilder {
 
   def makeString: String = new String(cs, 0, len)
 
-  @SuppressWarnings(
-    Array(
-      "org.wartremover.warts.Return",
-      "org.wartremover.warts.While"))
   def resizeIfNecessary(goal: Int): Unit = {
     if (goal <= capacity) return ()
     var cap = capacity
@@ -86,7 +77,6 @@ private[tectonic] final class CharBuilder {
     }
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.While"))
   def extend(s: CharSequence): Unit = {
     val tlen = len + s.length
     resizeIfNecessary(tlen)
