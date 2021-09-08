@@ -18,7 +18,6 @@ package tectonic
 
 import scala.annotation.switch
 
-import Predef._
 import cats.instances.int._
 import cats.syntax.eq._
 
