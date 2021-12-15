@@ -137,7 +137,7 @@ package object util {
     inverseSum * inverseSign
   }
 
-  def parseDouble(s: CharSequence, decIdx: Int, expIdx: Int) = {
+  def parseDouble(s: CharSequence, decIdx: Int, expIdx: Int): Double = {
     if (decIdx < 0 && expIdx < 0) {
       if (s.length <= MaxSafeLongLength) {
         parseLongUnsafe(s).toDouble
