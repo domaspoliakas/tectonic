@@ -141,15 +141,14 @@ package object util {
     if (decIdx < 0 && expIdx < 0) {
       if (s.length <= MaxSafeLongLength) {
         parseLongUnsafe(s).toDouble
-      }
-      else try {
-        parseLong(s).toDouble
-      } catch {
-        case _: InvalidLong =>
-          stringToDouble(s.toString)
-      }
-    }
-    else {
+      } else
+        try {
+          parseLong(s).toDouble
+        } catch {
+          case _: InvalidLong =>
+            stringToDouble(s.toString)
+        }
+    } else {
       stringToDouble(s.toString)
     }
   }
@@ -159,11 +158,9 @@ package object util {
 
     if (result.isPosInfinity) {
       Double.MaxValue
-    }
-    else if (result.isNegInfinity) {
+    } else if (result.isNegInfinity) {
       Double.MinValue
-    }
-    else {
+    } else {
       result
     }
   }
