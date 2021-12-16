@@ -136,4 +136,45 @@ package object util {
 
     inverseSum * inverseSign
   }
+
+  def parseDoubleUnsafe(s: CharSequence, decIdx: Int, expIdx: Int): Double = {
+    if (decIdx < 0 && expIdx < 0) {
+      if (s.length <= MaxSafeLongLength) {
+        parseLongUnsafe(s).toDouble
+      } else
+        try {
+          parseLong(s).toDouble
+        } catch {
+          case _: InvalidLong =>
+            stringToDouble(s.toString)
+        }
+    } else {
+      stringToDouble(s.toString)
+    }
+  }
+
+  def parseDouble(s: CharSequence, decIdx: Int, expIdx: Int): Double = {
+    if (decIdx < 0 && expIdx < 0) {
+      try {
+        parseLong(s).toDouble
+      } catch {
+        case _: InvalidLong =>
+          stringToDouble(s.toString)
+      }
+    } else {
+      stringToDouble(s.toString)
+    }
+  }
+
+  def stringToDouble(str: String): Double = {
+    val result = str.toDouble
+
+    if (result.isPosInfinity) {
+      Double.MaxValue
+    } else if (result.isNegInfinity) {
+      Double.MinValue
+    } else {
+      result
+    }
+  }
 }
