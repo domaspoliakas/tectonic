@@ -4,38 +4,35 @@ ThisBuild / scalaVersion := "2.13.6"
 
 ThisBuild / githubRepository := "tectonic"
 
-homepage in ThisBuild := Some(url("https://github.com/precog/tectonic"))
+ThisBuild / homepage := Some(url("https://github.com/precog/tectonic"))
 
-scmInfo in ThisBuild := Some(
+ThisBuild / scmInfo := Some(
   ScmInfo(url("https://github.com/precog/tectonic"), "scm:git@github.com:precog/tectonic.git"))
 
+val CatsEffectVersion = "3.3.11"
 val Fs2Version = "3.0.6"
-
-ThisBuild / publishAsOSSProject := true
-
-val commonOverrides = Seq(githubRepository := "tectonic")
+val JawnFs2Version = "2.2.0"
+val ScalacheckVersion = "1.16.0"
+val Specs2Version = "4.15.0"
 
 // Include to also publish a project's tests
-lazy val publishTestsSettings = Seq(publishArtifact in (Test, packageBin) := true)
+lazy val publishTestsSettings = Seq(Test / packageBin / publishArtifact := true)
 
 lazy val root = project
   .in(file("."))
   .settings(noPublishSettings)
   .aggregate(core, fs2, test, benchmarks, harness)
-  .settings(commonOverrides)
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val core = project
   .in(file("core"))
   .settings(name := "tectonic")
-  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % "3.2.1")
-  .settings(commonOverrides)
+  .settings(libraryDependencies += "org.typelevel" %% "cats-effect" % CatsEffectVersion)
   .enablePlugins(AutomateHeaderPlugin)
 
 lazy val fs2 = project
   .in(file("fs2"))
   .dependsOn(core, test % "test->test")
-  .settings(commonOverrides)
   .settings(name := "tectonic-fs2")
   .settings(libraryDependencies += "co.fs2" %% "fs2-core" % Fs2Version)
   .enablePlugins(AutomateHeaderPlugin)
@@ -43,7 +40,6 @@ lazy val fs2 = project
 lazy val harness = project
   .in(file("harness"))
   .dependsOn(fs2)
-  .settings(commonOverrides)
   .settings(name := "tectonic-harness")
   .settings(noPublishSettings) // mostly for internal testing
   .settings(libraryDependencies += "co.fs2" %% "fs2-io" % Fs2Version)
@@ -53,12 +49,12 @@ lazy val test = project
   .in(file("test"))
   .dependsOn(core)
   .settings(name := "tectonic-test")
-  .settings(commonOverrides)
   .settings(
     libraryDependencies ++= Seq(
-      "org.specs2" %% "specs2-core" % "4.10.6",
-      "org.scalacheck" %% "scalacheck" % "1.15.4"),
-    libraryDependencies += "org.specs2" %% "specs2-scalacheck" % "4.10.6" % Test
+      "org.scalacheck" %% "scalacheck" % ScalacheckVersion,
+      "org.specs2" %% "specs2-core" % Specs2Version,
+      "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test
+    )
   )
   .enablePlugins(AutomateHeaderPlugin)
 
@@ -66,7 +62,6 @@ lazy val benchmarks = project
   .in(file("benchmarks"))
   .dependsOn(core, fs2)
   .settings(name := "tectonic-benchmarks")
-  .settings(commonOverrides)
   .settings(noPublishSettings)
   .settings(
     scalacStrictMode := false,
@@ -76,7 +71,7 @@ lazy val benchmarks = project
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % Fs2Version,
       "co.fs2" %% "fs2-io" % Fs2Version,
-      "org.http4s" %% "jawn-fs2" % "1.1.3")
+      "org.typelevel" %% "jawn-fs2" % JawnFs2Version)
   )
   .settings( // magic rewiring so sbt-jmh works sanely
     Jmh / sourceDirectory := (Compile / sourceDirectory).value,
