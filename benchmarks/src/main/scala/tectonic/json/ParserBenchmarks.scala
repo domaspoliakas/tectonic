@@ -26,7 +26,6 @@ import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
-import jawnfs2._
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.BenchmarkMode
 import org.openjdk.jmh.annotations.Mode
@@ -35,6 +34,7 @@ import org.openjdk.jmh.annotations.Param
 import org.openjdk.jmh.annotations.Scope
 import org.openjdk.jmh.annotations.State
 import org.openjdk.jmh.infra.Blackhole
+import org.typelevel.jawn.fs2._
 import tectonic.fs2.StreamParser
 
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
