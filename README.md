@@ -28,7 +28,7 @@ import tectonic.json.Parser
 import tectonic.fs2.StreamParser
 
 // assuming MyPlate.apply[F[_]] returns an F[Plate[A]]
-val parserF = 
+val parserF =
   Parser(MyPlate[IO], Parser.ValueStream)) // assuming whitespace-delimited json
 
 val input: Stream[IO, Byte] = ...
