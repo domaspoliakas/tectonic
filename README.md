@@ -288,4 +288,3 @@ The line count test really just serves as a lower-bound on how long it takes fs2
 
 To the extent that lines of code have been copied from the Jawn codebase, they retain their original copyright and license, which is [The MIT License](https://opensource.org/licenses/MIT). Original code which is unique to Tectonic is licensed under [The Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), copyright [Precog Data](https://precog.com). Files which are substantially drawn from Jawn retain *both* copyright headers, as well as a special thank-you to the Jawn contributors.
 
-
