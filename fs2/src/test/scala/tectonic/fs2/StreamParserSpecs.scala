@@ -40,6 +40,9 @@ class StreamParserSpecs extends Specification {
   val parser: Pipe[IO, Byte, Event] =
     StreamParser.foldable(parserF)
 
+  def plateParser(f: Plate[List[Event]] => Plate[List[Event]]): Pipe[IO, Byte, Event] =
+    StreamParser.foldable(Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream))
+
   "stream parser transduction" should {
     "parse a single value" in {
       val results = Stream.chunk(Chunk.array("42".getBytes)).through(parser)
@@ -61,6 +64,54 @@ class StreamParserSpecs extends Specification {
       val expected = List(Num("79", -1, -1), FinishRow)
 
       results.compile.toList.unsafeRunSync() mustEqual expected
+    }
+
+    def targetMask[A](target: Either[Int, String])(delegate: Plate[A]): Plate[A] =
+      new DelegatingPlate[A](delegate) {
+        private[this] var depth = 0
+        private[this] var index = 0
+
+        override def nestMap(pathComponent: CharSequence): Signal = {
+          if (Right(pathComponent.toString) == target && depth == 0) {
+            super.nestMap(pathComponent)
+          } else {
+            depth += 1
+            Signal.SkipColumn
+          }
+        }
+
+        override def nestArr(): Signal = {
+          if (depth == 0) {
+            index += 1
+            if (Left(index - 1) == target) {
+              super.nestArr()
+            } else {
+              depth += 1
+              Signal.SkipColumn
+            }
+          } else {
+            depth += 1
+            Signal.SkipColumn
+          }
+        }
+
+        override def unnest(): Signal = {
+          if (depth == 0) {
+            super.unnest()
+          } else {
+            depth -= 1
+            Signal.Continue
+          }
+        }
+      }
+
+
+    "repro - 118" in {
+      val str = """{"a": "\"quoted\""} {"b": false, "c": "abc"}"""
+      val chunks = str.toCharArray.map(c => Chunk.array(c.toString.getBytes))
+      val stream = chunks.map(Stream.chunk(_)).fold(Stream.empty)(_ ++ _)
+      val res = stream.through(plateParser(targetMask[List[Event]](Right("b"))))
+      res.compile.toList.unsafeRunSync().size mustEqual 24
     }
 
     "parse two values from two chunks" in {

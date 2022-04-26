@@ -150,7 +150,7 @@ abstract class BaseParser[F[_], A] {
 
   // every 1M we shift our array back to the beginning.
   protected[this] final def reset(i: Int): Int = {
-    if (i >= 1048576) {
+    if (i >= 4) {
       val diff = i
       curr -= diff
       len -= diff
