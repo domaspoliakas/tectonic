@@ -47,7 +47,8 @@ abstract class StreamParserSpecs(val resetSize: Int) extends Specification {
     StreamParser.foldable(parserF)
 
   def plateParser(f: Plate[List[Event]] => Plate[List[Event]]): Pipe[IO, Byte, Event] =
-    StreamParser.foldable(Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream, resetSize))
+    StreamParser.foldable(
+      Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream, resetSize))
 
   "stream parser transduction" should {
     "parse a single value" in {
@@ -116,7 +117,11 @@ abstract class StreamParserSpecs(val resetSize: Int) extends Specification {
       val chunks = str.toCharArray.map(c => Chunk.array(c.toString.getBytes))
       val stream = chunks.map(Stream.chunk(_)).fold(Stream.empty)(_ ++ _)
       val res = stream.through(plateParser(targetMask[List[Event]](Right("b"))))
-      res.compile.toList.unsafeRunSync() mustEqual List(NestMap("b"), Str(""" "q """), Unnest, FinishRow)
+      res.compile.toList.unsafeRunSync() mustEqual List(
+        NestMap("b"),
+        Str(""" "q """),
+        Unnest,
+        FinishRow)
     }
 
     "repro - 118" in {
@@ -125,7 +130,15 @@ abstract class StreamParserSpecs(val resetSize: Int) extends Specification {
       val stream = chunks.map(Stream.chunk(_)).fold(Stream.empty)(_ ++ _)
       val res = stream.through(plateParser(targetMask[List[Event]](Right("b"))))
       res.compile.toList.unsafeRunSync() mustEqual
-        List(Skipped(1), Skipped(1), Skipped(1), Skipped(2), Skipped(1), Skipped(1), Skipped(1), FinishRow)
+        List(
+          Skipped(1),
+          Skipped(1),
+          Skipped(1),
+          Skipped(2),
+          Skipped(1),
+          Skipped(1),
+          Skipped(1),
+          FinishRow)
     }
 
     "parse two values from two chunks" in {
