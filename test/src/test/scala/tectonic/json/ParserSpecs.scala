@@ -94,6 +94,22 @@ class ParserSpecs extends Specification {
       "string" >> {
         """"quick brown fox"""" must parseRowAs(Str("quick brown fox"))
       }
+
+      "string with control chars" >> {
+        """" \b \f \n \r \t """" must parseRowAs(Str(" \b \f \n \r \t "))
+      }
+
+      """string with \" """ >> {
+        """" \" """" must parseRowAs(Str(""" " """))
+      }
+
+      """string with \/ """ >> {
+        """" \/ """" must parseRowAs(Str(""" / """))
+      }
+
+      """string with \\ """" >> {
+        """" \\ """" must parseRowAs(Str(""" \ """))
+      }
     }
 
     "parse a map with two keys" in {
