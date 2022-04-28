@@ -900,7 +900,7 @@ final class Parser[F[_], A] private (
       case SKIP_STRING =>
         (c: @switch) match {
           case '\\' =>
-            // at(i + 1)
+            at(i + 1)
             rskip(skipDepthBits | SKIP_STRING, i + 2)
           case '"' => rskip(skipDepthBits | SKIP_MAIN, i + 1)
           case _ => rskip(state, i + 1)
