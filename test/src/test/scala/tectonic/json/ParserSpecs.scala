@@ -31,7 +31,14 @@ import tectonic.test.ReifiedTerminalPlate
 import tectonic.test.beComplete
 import tectonic.test.json._
 
-class ParserSpecs extends Specification {
+class ParserSpecsResetSize1 extends ParserSpecs(1)
+
+class ParserSpecsResetSize4 extends ParserSpecs(4)
+
+class ParserSpecsResetSize1M extends ParserSpecs(1048576)
+
+abstract class ParserSpecs(val resetSize: Int) extends Specification with ParseHelper {
+
   import Event._
 
   "utf-8 byte handling" should {

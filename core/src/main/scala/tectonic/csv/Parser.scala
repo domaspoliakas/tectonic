@@ -24,7 +24,7 @@ import cats.effect.Sync
 import cats.syntax.all._
 import tectonic.util.CharBuilder
 
-final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends BaseParser[F, A] {
+final class Parser[F[_], A](plate: Plate[A], config: Parser.Config, resetSize: Int) extends BaseParser[F, A](resetSize) {
 
   /*
    * The state is a three-bit value representing the parsing of
@@ -468,8 +468,8 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config) extends Base
 
 object Parser {
 
-  def apply[F[_]: Sync, A](plateF: F[Plate[A]], config: Config): F[BaseParser[F, A]] = {
-    plateF flatMap { plate => Sync[F].delay(new Parser[F, A](plate, config)) }
+  def apply[F[_]: Sync, A](plateF: F[Plate[A]], config: Config, resetSize: Int = 1048576): F[BaseParser[F, A]] = {
+    plateF flatMap { plate => Sync[F].delay(new Parser[F, A](plate, config, resetSize)) }
   }
 
   // defaults to Excel-style with Windows newlines

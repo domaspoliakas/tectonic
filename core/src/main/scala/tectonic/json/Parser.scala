@@ -83,12 +83,13 @@ import tectonic.util.CharBuilder
  */
 final class Parser[F[_], A] private (
     plate: Plate[A],
+    resetSize: Int,
     private[this] var state: Int,
     private[this] var ring: Long,
     private[this] var roffset: Int,
     private[this] var fallback: BList,
     private[this] var streamMode: Int)
-    extends BaseParser[F, A] {
+    extends BaseParser[F, A](resetSize) {
 
   // flag indicating that a premature batch termination has been requested
   // this flag is checked (and reset) in the `checkpoint` function
@@ -165,11 +166,15 @@ final class Parser[F[_], A] private (
     arr
   }
 
+  // private def debugData(s: String) =
+  //   println(s"$s pos $pos state $state curr $curr offset $offset data ${data.toList.take(len).map(_.toChar)}")
+
   protected[this] def churn(): ParseResult[A] = {
 
     // we rely on exceptions to tell us when we run out of data
     try {
       while (true) {
+        // debugData("loop")
         if (state < 0) {
           (at(offset): @switch) match {
             case '\n' =>
@@ -894,7 +899,9 @@ final class Parser[F[_], A] private (
 
       case SKIP_STRING =>
         (c: @switch) match {
-          case '\\' => rskip(skipDepthBits | SKIP_STRING, i + 2)
+          case '\\' =>
+            // at(i + 1)
+            rskip(skipDepthBits | SKIP_STRING, i + 2)
           case '"' => rskip(skipDepthBits | SKIP_MAIN, i + 1)
           case _ => rskip(state, i + 1)
         }
@@ -954,11 +961,14 @@ object Parser {
 
   def apply[F[_]: Sync, A](
       plateF: F[Plate[A]],
-      mode: Mode = SingleValue): F[BaseParser[F, A]] = {
+      mode: Mode = SingleValue,
+      resetSize: Int = 1048576) // 1M
+      : F[BaseParser[F, A]] = {
     plateF flatMap { plate =>
       Sync[F].delay(
         new Parser(
           plate,
+          resetSize = resetSize,
           state = mode.start,
           ring = 0L,
           roffset = -1,

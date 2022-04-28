@@ -31,17 +31,23 @@ import tectonic.json.Parser
 import tectonic.test.Event
 import tectonic.test.ReifiedTerminalPlate
 
-class StreamParserSpecs extends Specification {
+class StreamParserSpecsResetSize1 extends StreamParserSpecs(1)
+
+class StreamParserSpecsResetSize4 extends StreamParserSpecs(4)
+
+class StreamParserSpecsResetSize1M extends StreamParserSpecs(1048576)
+
+abstract class StreamParserSpecs(val resetSize: Int) extends Specification {
   import Event._
 
   val parserF: IO[BaseParser[IO, List[Event]]] =
-    Parser(ReifiedTerminalPlate[IO](), Parser.ValueStream)
+    Parser(ReifiedTerminalPlate[IO](), Parser.ValueStream, resetSize)
 
   val parser: Pipe[IO, Byte, Event] =
     StreamParser.foldable(parserF)
 
   def plateParser(f: Plate[List[Event]] => Plate[List[Event]]): Pipe[IO, Byte, Event] =
-    StreamParser.foldable(Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream))
+    StreamParser.foldable(Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream, resetSize))
 
   "stream parser transduction" should {
     "parse a single value" in {
@@ -105,13 +111,21 @@ class StreamParserSpecs extends Specification {
         }
       }
 
-
-    "repro - 118" in {
-      val str = """{"a": "\"quoted\""} {"b": false, "c": "abc"}"""
+    """parse json with \" """ in {
+      val str = """{"b": " \"q "}"""
       val chunks = str.toCharArray.map(c => Chunk.array(c.toString.getBytes))
       val stream = chunks.map(Stream.chunk(_)).fold(Stream.empty)(_ ++ _)
       val res = stream.through(plateParser(targetMask[List[Event]](Right("b"))))
-      res.compile.toList.unsafeRunSync().size mustEqual 24
+      res.compile.toList.unsafeRunSync() mustEqual List(NestMap("b"), Str(""" "q """), Unnest, FinishRow)
+    }
+
+    "repro - 118" in {
+      val str = """{"a": "\"q "}"""
+      val chunks = str.toCharArray.map(c => Chunk.array(c.toString.getBytes))
+      val stream = chunks.map(Stream.chunk(_)).fold(Stream.empty)(_ ++ _)
+      val res = stream.through(plateParser(targetMask[List[Event]](Right("b"))))
+      res.compile.toList.unsafeRunSync() mustEqual
+        List(Skipped(1), Skipped(1), Skipped(1), Skipped(2), Skipped(1), Skipped(1), Skipped(1), FinishRow)
     }
 
     "parse two values from two chunks" in {

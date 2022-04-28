@@ -47,18 +47,18 @@ import java.nio.charset.Charset
 
 import cats.effect.Sync
 
-abstract class BaseParser[F[_], A] {
+abstract class BaseParser[F[_], A](resetSize: Int) {
 
-  private[this] var data = new Array[Byte](131072)
-  private[this] var len = 0
-  private[this] var allocated = 131072
+  protected[this] var data = new Array[Byte](131072)
+  protected[this] var len = 0
+  protected[this] var allocated = 131072
   protected[this] final var offset = 0
 
   // async positioning
   protected[this] final var curr: Int = 0
 
-  private[this] var line = 0
-  private[this] var pos = 0
+  protected[this] var line = 0
+  protected[this] var pos = 0
 
   protected[this] final def newline(i: Int): Unit = { line += 1; pos = i + 1 }
   protected[this] final def column(i: Int) = i - pos
@@ -150,7 +150,7 @@ abstract class BaseParser[F[_], A] {
 
   // every 1M we shift our array back to the beginning.
   protected[this] final def reset(i: Int): Int = {
-    if (i >= 4) {
+    if (i >= resetSize) {
       val diff = i
       curr -= diff
       len -= diff
