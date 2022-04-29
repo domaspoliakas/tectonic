@@ -124,7 +124,7 @@ abstract class StreamParserSpecs(val resetSize: Int) extends Specification {
         FinishRow)
     }
 
-    "repro - 118" in {
+    "repro - 198" in {
       val str = """{"a": "\"q "}"""
       val chunks = str.toCharArray.map(c => Chunk.array(c.toString.getBytes))
       val stream = chunks.map(Stream.chunk(_)).fold(Stream.empty)(_ ++ _)
@@ -134,7 +134,8 @@ abstract class StreamParserSpecs(val resetSize: Int) extends Specification {
           Skipped(1),
           Skipped(1),
           Skipped(1),
-          Skipped(2),
+          Skipped(1),
+          Skipped(1),
           Skipped(1),
           Skipped(1),
           Skipped(1),

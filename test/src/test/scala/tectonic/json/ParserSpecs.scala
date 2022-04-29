@@ -359,13 +359,15 @@ abstract class ParserSpecs(val resetSize: Int) extends Specification with ParseH
       input must parseAsWithPlate(expected: _*)(targetMask[List[Event]](Right("c")))
     }
 
-    // fails when resetSize is small - see https://github.com/precog/tectonic/issues/200
-    // "retain only [1] in [..., ..., ..., ...]" in {
-    //   val input = """[42, "hi", true, null]"""
-    //   val expected =
-    //     List(Skipped(2), NestArr, Str("hi"), Unnest, Skipped(5), Skipped(5), FinishRow)
-    //   input must parseAsWithPlate(expected: _*)(targetMask[List[Event]](Left(1)))
-    // }
+    // fails when resetSize is very small - see https://github.com/precog/tectonic/issues/200
+    if (resetSize >= 32) {
+      "retain only [1] in [..., ..., ..., ...]" in {
+        val input = """[42, "hi", true, null]"""
+        val expected =
+          List(Skipped(2), NestArr, Str("hi"), Unnest, Skipped(5), Skipped(5), FinishRow)
+        input must parseAsWithPlate(expected: _*)(targetMask[List[Event]](Left(1)))
+      }
+    }
 
     "handle nested structure in skips" in {
       val input = """{ "a": { "c": [1, 2, 3], "d": { "e": null } }, "b": "hi" }"""

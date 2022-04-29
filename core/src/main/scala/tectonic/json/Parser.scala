@@ -134,6 +134,7 @@ final class Parser[F[_], A] private (
 
   @inline private[this] final val SKIP_MAIN = 8
   @inline private[this] final val SKIP_STRING = 9
+  @inline private[this] final val SKIP_STRING_ESCAPE = 10
 
   /*
    * This is slightly tricky. We're using the otherwise-unused
@@ -899,12 +900,13 @@ final class Parser[F[_], A] private (
 
       case SKIP_STRING =>
         (c: @switch) match {
-          case '\\' =>
-            at(i + 1)
-            rskip(skipDepthBits | SKIP_STRING, i + 2)
+          case '\\' => rskip(skipDepthBits | SKIP_STRING_ESCAPE, i + 1)
           case '"' => rskip(skipDepthBits | SKIP_MAIN, i + 1)
           case _ => rskip(state, i + 1)
         }
+
+      case SKIP_STRING_ESCAPE =>
+        rskip(skipDepthBits | SKIP_STRING, i + 1)
 
       case _ =>
         error("invalid state in rskip: " + state.toString)
