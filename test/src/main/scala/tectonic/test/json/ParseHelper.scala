@@ -16,6 +16,7 @@
 
 package tectonic
 package test
+package json
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
@@ -23,7 +24,10 @@ import org.specs2.matcher.Matcher
 import org.specs2.matcher.MatchersImplicits
 import tectonic.json.Parser
 
-package object json {
+trait ParseHelper {
+
+  def resetSize: Int
+
   private object MatchersImplicits extends MatchersImplicits
 
   import MatchersImplicits._
@@ -38,7 +42,7 @@ package object json {
       expected: Event*)(f: Plate[List[Event]] => Plate[List[Event]])(
       implicit runtime: IORuntime): Matcher[A] = { input: A =>
     val resultsF = for {
-      parser <- Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream)
+      parser <- Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream, resetSize)
       left <- Absorbable[A].absorb(parser, input)
       right <- parser.finish
     } yield (left, right)

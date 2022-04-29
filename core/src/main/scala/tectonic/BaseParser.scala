@@ -47,7 +47,7 @@ import java.nio.charset.Charset
 
 import cats.effect.Sync
 
-abstract class BaseParser[F[_], A] {
+abstract class BaseParser[F[_], A](resetSize: Int) {
 
   private[this] var data = new Array[Byte](131072)
   private[this] var len = 0
@@ -150,7 +150,7 @@ abstract class BaseParser[F[_], A] {
 
   // every 1M we shift our array back to the beginning.
   protected[this] final def reset(i: Int): Int = {
-    if (i >= 1048576) {
+    if (i >= resetSize) {
       val diff = i
       curr -= diff
       len -= diff
