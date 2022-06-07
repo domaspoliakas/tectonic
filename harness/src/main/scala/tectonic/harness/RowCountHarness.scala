@@ -16,14 +16,14 @@
 
 package tectonic.harness
 
-import java.nio.file.Path
-
 import cats.effect.IO
 import cats.effect.Sync
 import cats.instances.long._
 import fs2.Chunk
 import fs2.Pipe
 import fs2.io.file.Files
+import fs2.io.file.Flags
+import fs2.io.file.Path
 import tectonic.Plate
 import tectonic.Signal
 import tectonic.csv
@@ -40,7 +40,7 @@ object RowCountHarness {
 
   def rowCountJson(file: Path, mode: json.Parser.Mode): IO[Long] = {
     Files[IO]
-      .readAll(file, 16384)
+      .readAll(file, 16384, Flags.Read)
       .through(jsonParser(mode))
       .foldMonoid
       .compile
@@ -50,7 +50,7 @@ object RowCountHarness {
 
   def rowCountCsv(file: Path, config: csv.Parser.Config): IO[Long] = {
     Files[IO]
-      .readAll(file, 16384)
+      .readAll(file, 16384, Flags.Read)
       .through(csvParser(config))
       .foldMonoid
       .compile

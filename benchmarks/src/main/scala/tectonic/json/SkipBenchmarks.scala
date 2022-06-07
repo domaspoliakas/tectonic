@@ -24,6 +24,8 @@ import scala.collection.immutable.List
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
+import _root_.fs2.io.file.Flags
+import _root_.fs2.io.file.Path
 import cats.effect.IO
 import cats.effect.Sync
 import cats.effect.unsafe.implicits.global
@@ -68,7 +70,10 @@ class SkipBenchmarks {
       back <- ProjectionPlate[IO, List[Nothing]](terminal, "bar", enableSkips)
     } yield back
 
-    val contents = Files[IO].readAll(ResourceDir.resolve("ugh10k.json"), ChunkSize)
+    val contents = Files[IO].readAll(
+      Path.fromNioPath(ResourceDir.resolve("ugh10k.json")),
+      ChunkSize,
+      Flags.Read)
 
     val parser = StreamParser(Parser(plateF, Parser.UnwrapArray))(_ => Chunk.empty[Nothing])
 

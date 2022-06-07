@@ -88,5 +88,6 @@ object StreamParser {
 
   def foldable[F[_]: Sync, G[_]: Foldable, A](
       parserF: F[BaseParser[F, G[A]]]): Pipe[F, Byte, A] =
-    apply(parserF)(ga => Chunk.buffer(ga.foldLeft(new mutable.ArrayBuffer[A])(_ += _)))
+    apply(parserF)(ga =>
+      Chunk.indexedSeq((ga.foldLeft(new mutable.ArrayBuffer[A])(_ += _)).toIndexedSeq))
 }
