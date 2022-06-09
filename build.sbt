@@ -1,6 +1,6 @@
 import scala.collection.Seq
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.8"
 
 ThisBuild / githubRepository := "tectonic"
 
@@ -9,8 +9,8 @@ ThisBuild / homepage := Some(url("https://github.com/precog/tectonic"))
 ThisBuild / scmInfo := Some(
   ScmInfo(url("https://github.com/precog/tectonic"), "scm:git@github.com:precog/tectonic.git"))
 
-val CatsEffectVersion = "3.3.11"
-val Fs2Version = "3.0.6"
+val CatsEffectVersion = "3.3.12"
+val Fs2Version = "3.2.7"
 val JawnFs2Version = "2.2.0"
 val ScalacheckVersion = "1.16.0"
 val Specs2Version = "4.15.0"

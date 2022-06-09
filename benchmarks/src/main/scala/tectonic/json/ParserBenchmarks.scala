@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Precog Data
+ * Copyright 2022 Precog Data Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import scala.collection.immutable.List
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
+import _root_.fs2.io.file.Flags
+import _root_.fs2.io.file.Path
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import org.openjdk.jmh.annotations.Benchmark
@@ -95,7 +97,10 @@ class ParserBenchmarks {
       Jawn.TinyScalarCost,
       NumericCost)
 
-    val contents = Files[IO].readAll(ResourceDir.resolve(inputFile + ".json"), ChunkSize)
+    val contents = Files[IO].readAll(
+      Path.fromNioPath(ResourceDir.resolve(inputFile + ".json")),
+      ChunkSize,
+      Flags.Read)
 
     val processed = if (framework == TectonicFramework) {
       val mode = if (inputMode) Parser.UnwrapArray else Parser.ValueStream

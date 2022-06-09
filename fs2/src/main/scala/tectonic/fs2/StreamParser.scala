@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Precog Data
+ * Copyright 2022 Precog Data Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,5 +88,6 @@ object StreamParser {
 
   def foldable[F[_]: Sync, G[_]: Foldable, A](
       parserF: F[BaseParser[F, G[A]]]): Pipe[F, Byte, A] =
-    apply(parserF)(ga => Chunk.buffer(ga.foldLeft(new mutable.ArrayBuffer[A])(_ += _)))
+    apply(parserF)(ga =>
+      Chunk.indexedSeq((ga.foldLeft(new mutable.ArrayBuffer[A])(_ += _)).toIndexedSeq))
 }

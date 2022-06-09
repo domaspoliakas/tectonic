@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Precog Data
+ * Copyright 2022 Precog Data Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit
 
 import _root_.fs2.Chunk
 import _root_.fs2.io.file.Files
+import _root_.fs2.io.file.Flags
+import _root_.fs2.io.file.Path
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.instances.int._
@@ -89,7 +91,8 @@ class ParserBenchmarks {
       }
     }
 
-    val contents = Files[IO].readAll(ResourceDir.resolve(inputFile), ChunkSize)
+    val contents =
+      Files[IO].readAll(Path.fromNioPath(ResourceDir.resolve(inputFile)), ChunkSize, Flags.Read)
 
     val processed = if (framework == TectonicFramework) {
       val parser =
@@ -109,7 +112,8 @@ class ParserBenchmarks {
   def lineCountThroughFs2(): Unit = {
     val inputFile = "worldcitiespop.txt"
 
-    val contents = Files[IO].readAll(ResourceDir.resolve(inputFile), ChunkSize)
+    val contents =
+      Files[IO].readAll(Path.fromNioPath(ResourceDir.resolve(inputFile)), ChunkSize, Flags.Read)
 
     val counts = contents.chunks map { bytes =>
       val buf = bytes.toByteBuffer
