@@ -496,10 +496,10 @@ final class Parser[F[_], A] private (
     var j = i
     var c: Int = byte(j) & 0xff
     while (c != 34) {
-      if (c < 32) 
-        if (ignoreControlCharacters) 
-          -1
-        else 
+      if (c < 32)
+        if (ignoreControlCharacters)
+          return -1
+        else
           die(j, s"control char ($c) in string")
       if (c == 92) return -1
       j += 1
@@ -550,7 +550,7 @@ final class Parser[F[_], A] private (
       } else if (c < 32) {
         if (ignoreControlCharacters)
           j += 1
-        else 
+        else
           die(j, s"control char ($c) in string")
       } else if (c < 128) {
         // 1-byte UTF-8 sequence
@@ -974,7 +974,7 @@ object Parser {
       mode: Mode = SingleValue,
       resetSize: Int = 1048576,
       ignoreControlCharacters: Boolean = false
-      ) // 1M
+  ) // 1M
       : F[BaseParser[F, A]] = {
     plateF flatMap { plate =>
       Sync[F].delay(

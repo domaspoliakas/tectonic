@@ -47,7 +47,7 @@ abstract class ParserSpecs(val resetSize: Int) extends Specification with ParseH
       val bytes = Array[Byte]('"'.toByte, 'a'.toByte, 0x05.toByte, 'b'.toByte, '"'.toByte)
 
       bytes must parseRowAs(
-        ignoreControlCharacters = true, 
+        ignoreControlCharacters = true,
         Str("ab"),
         FinishRow
       )
@@ -57,7 +57,11 @@ abstract class ParserSpecs(val resetSize: Int) extends Specification with ParseH
       val bytes = Array[Byte]('"'.toByte, 'a'.toByte, 0x05.toByte, 'b'.toByte, '"'.toByte)
 
       bytes must failToParseWith(
-        ParseException(s"control char (5) in string got ${0x05.toChar} (line 1, column 3)", 2, 1, 3)
+        ParseException(
+          s"control char (5) in string got ${0x05.toChar} (line 1, column 3)",
+          2,
+          1,
+          3)
       )
 
     }
