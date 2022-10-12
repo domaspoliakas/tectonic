@@ -84,6 +84,7 @@ import tectonic.util.CharBuilder
 final class Parser[F[_], A] private (
     plate: Plate[A],
     resetSize: Int,
+    ignoreControlCharacters: Boolean,
     private[this] var state: Int,
     private[this] var ring: Long,
     private[this] var roffset: Int,
@@ -495,7 +496,11 @@ final class Parser[F[_], A] private (
     var j = i
     var c: Int = byte(j) & 0xff
     while (c != 34) {
-      if (c < 32) die(j, s"control char ($c) in string")
+      if (c < 32)
+        if (ignoreControlCharacters)
+          return -1
+        else
+          die(j, s"control char ($c) in string")
       if (c == 92) return -1
       j += 1
       c = byte(j) & 0xff
@@ -543,7 +548,10 @@ final class Parser[F[_], A] private (
           case c => die(j, s"invalid escape sequence (\\${c.toChar})")
         }
       } else if (c < 32) {
-        die(j, s"control char ($c) in string")
+        if (ignoreControlCharacters)
+          j += 1
+        else
+          die(j, s"control char ($c) in string")
       } else if (c < 128) {
         // 1-byte UTF-8 sequence
         sb.append(c.toChar)
@@ -964,13 +972,16 @@ object Parser {
   def apply[F[_]: Sync, A](
       plateF: F[Plate[A]],
       mode: Mode = SingleValue,
-      resetSize: Int = 1048576) // 1M
+      resetSize: Int = 1048576,
+      ignoreControlCharacters: Boolean = false
+  ) // 1M
       : F[BaseParser[F, A]] = {
     plateF flatMap { plate =>
       Sync[F].delay(
         new Parser(
           plate,
           resetSize = resetSize,
+          ignoreControlCharacters = ignoreControlCharacters,
           state = mode.start,
           ring = 0L,
           roffset = -1,

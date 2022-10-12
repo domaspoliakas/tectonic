@@ -38,46 +38,70 @@ trait ParseHelper {
   def parseAs[A: Absorbable](expected: Event*)(implicit runtime: IORuntime): Matcher[A] =
     parseAsWithPlate(expected: _*)(p => p)
 
-  def parseAsWithPlate[A: Absorbable](
-      expected: Event*)(f: Plate[List[Event]] => Plate[List[Event]])(
-      implicit runtime: IORuntime): Matcher[A] = { input: A =>
-    val resultsF = for {
-      parser <- Parser(ReifiedTerminalPlate[IO]().map(f), Parser.ValueStream, resetSize)
-      left <- Absorbable[A].absorb(parser, input)
-      right <- parser.finish
-    } yield (left, right)
+  def parseAs[A: Absorbable](ignoreControlCharacters: Boolean, expected: Event*)(
+      implicit runtime: IORuntime): Matcher[A] =
+    parseAsWithPlate(ignoreControlCharacters, expected: _*)(p => p)
 
-    resultsF.unsafeRunSync() match {
-      case (ParseResult.Complete(init), ParseResult.Complete(tail)) =>
-        val results = init ++ tail
-        (results == expected.toList, s"$results != ${expected.toList}")
+  def parseRowAs[A: Absorbable](ignoreControlCharacters: Boolean, expected: Event*)(
+      implicit runtime: IORuntime): Matcher[A] =
+    parseAsWithPlate(ignoreControlCharacters, expected: _*)(p => p)
 
-      case (ParseResult.Partial(a, remaining), _) =>
-        (
-          false,
-          s"left partially succeded with partial result $a and $remaining bytes remaining")
+  def parseAsWithPlate[A: Absorbable](expected: Event*)(
+      f: Plate[List[Event]] => Plate[List[Event]])(implicit runtime: IORuntime): Matcher[A] =
+    parseAsWithPlate(false, expected: _*)(f)
 
-      case (_, ParseResult.Partial(a, remaining)) =>
-        (
-          false,
-          s"right partially succeded with partial result $a and $remaining bytes remaining")
+  def parseAsWithPlate[A: Absorbable](ignoreControlCharacters: Boolean, expected: Event*)(
+      f: Plate[List[Event]] => Plate[List[Event]])(implicit runtime: IORuntime): Matcher[A] = {
+    input: A =>
+      val resultsF = for {
+        parser <- Parser(
+          ReifiedTerminalPlate[IO]().map(f),
+          Parser.ValueStream,
+          resetSize,
+          ignoreControlCharacters)
+        left <- Absorbable[A].absorb(parser, input)
+        right <- parser.finish
+      } yield (left, right)
 
-      case (ParseResult.Failure(err), _) =>
-        (
-          false,
-          s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
+      resultsF.unsafeRunSync() match {
+        case (ParseResult.Complete(init), ParseResult.Complete(tail)) =>
+          val results = init ++ tail
+          (results == expected.toList, s"$results != ${expected.toList}")
 
-      case (_, ParseResult.Failure(err)) =>
-        (
-          false,
-          s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
-    }
+        case (ParseResult.Partial(a, remaining), _) =>
+          (
+            false,
+            s"left partially succeded with partial result $a and $remaining bytes remaining")
+
+        case (_, ParseResult.Partial(a, remaining)) =>
+          (
+            false,
+            s"right partially succeded with partial result $a and $remaining bytes remaining")
+
+        case (ParseResult.Failure(err), _) =>
+          (
+            false,
+            s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
+
+        case (_, ParseResult.Failure(err)) =>
+          (
+            false,
+            s"failed to parse with error '${err.getMessage}' at ${err.line}:${err.col} (i=${err.index})")
+      }
   }
 
   def failToParseWith[A: Absorbable](expected: ParseException)(
-      implicit runtime: IORuntime): Matcher[A] = { input: A =>
+      implicit runtime: IORuntime): Matcher[A] = failToParseWith[A](false, expected)
+
+  def failToParseWith[A: Absorbable](
+      ignoreControlCharacters: Boolean,
+      expected: ParseException
+  )(implicit runtime: IORuntime): Matcher[A] = { input: A =>
     val resultsF = for {
-      parser <- Parser(ReifiedTerminalPlate[IO](), Parser.ValueStream)
+      parser <- Parser(
+        ReifiedTerminalPlate[IO](),
+        Parser.ValueStream,
+        ignoreControlCharacters = ignoreControlCharacters)
       left <- Absorbable[A].absorb(parser, input)
       right <- parser.finish
     } yield (left, right)
