@@ -41,6 +41,29 @@ abstract class ParserSpecs(val resetSize: Int) extends Specification with ParseH
 
   import Event._
 
+  "control characters should" should {
+
+    "be ignored if the ignoreControlCharacters flag is set" in {
+      val bytes = Array[Byte]('"'.toByte, 'a'.toByte, 0x05.toByte, 'b'.toByte, '"'.toByte)
+
+      bytes must parseRowAs(
+        ignoreControlCharacters = true, 
+        Str("ab"),
+        FinishRow
+      )
+    }
+
+    "fail the parser if the ignoreControlCharacters flag is not set" in {
+      val bytes = Array[Byte]('"'.toByte, 'a'.toByte, 0x05.toByte, 'b'.toByte, '"'.toByte)
+
+      bytes must failToParseWith(
+        ParseException(s"control char (5) in string got ${0x05.toChar} (line 1, column 3)", 2, 1, 3)
+      )
+
+    }
+
+  }
+
   "utf-8 byte handling" should {
     "ignore a leading byte-order mark" in {
       val bytes = Array[Byte](0xef.toByte, 0xbb.toByte, 0xbf.toByte, '{'.toByte, '}'.toByte)
