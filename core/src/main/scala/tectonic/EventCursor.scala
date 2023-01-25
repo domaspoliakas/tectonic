@@ -21,7 +21,7 @@ import scala.annotation.switch
 import cats.instances.int._
 import cats.syntax.eq._
 
-final class EventCursor private (
+final class EventCursor (
     tagBuffer: Array[Long],
     tagOffset: Int,
     tagSubShiftOffset: Int,
