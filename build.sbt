@@ -9,11 +9,11 @@ ThisBuild / homepage := Some(url("https://github.com/precog/tectonic"))
 ThisBuild / scmInfo := Some(
   ScmInfo(url("https://github.com/precog/tectonic"), "scm:git@github.com:precog/tectonic.git"))
 
-val CatsEffectVersion = "3.3.14"
-val Fs2Version = "3.2.12"
-val JawnFs2Version = "2.2.0"
-val ScalacheckVersion = "1.16.0"
-val Specs2Version = "4.16.1"
+val CatsEffectVersion = "3.4.6"
+val Fs2Version = "3.6.1"
+val JawnFs2Version = "2.4.0"
+val ScalacheckVersion = "1.17.0"
+val Specs2Version = "4.19.2"
 
 // Include to also publish a project's tests
 lazy val publishTestsSettings = Seq(Test / packageBin / publishArtifact := true)
