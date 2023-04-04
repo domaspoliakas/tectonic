@@ -121,8 +121,6 @@ final class ReplayPlate private (
 
   final def finishBatch(terminal: Boolean): Option[EventCursor] = {
     if (terminal) {
-      println(s"recordStrSize: ${bufferedStrsSize}")
-
       Some(
         EventCursor(
           tagBuffer,
