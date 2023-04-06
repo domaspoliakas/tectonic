@@ -130,8 +130,7 @@ final class ReplayPlate private (
           strsPointer,
           intsBuffer,
           intsPointer))
-    }
-    else
+    } else
       None
   }
 
