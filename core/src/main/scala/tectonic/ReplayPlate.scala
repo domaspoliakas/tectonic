@@ -54,6 +54,8 @@ final class ReplayPlate private (
   private[this] var intsBuffer = new Array[Int](ReplayPlate.DefaultBufferSize / 16)
   private[this] var intsPointer = 0
 
+  private[this] var bufferedStrsSize = 0L
+
   final def nul(): Signal = {
     appendTag(Nul)
     Continue
@@ -147,6 +149,8 @@ final class ReplayPlate private (
   final def strsBufferLength(): Int = strsBuffer.length
   final def intsBufferLength(): Int = intsBuffer.length
 
+  final def strsBufferSize(): Long = bufferedStrsSize
+
   private[this] final def appendTag(tag: Int): Unit = {
     checkTags()
     tagBuffer(tagPointer) |= tag.toLong << tagSubShift
@@ -173,9 +177,13 @@ final class ReplayPlate private (
 
   private[this] final def appendStr(cs: CharSequence): Unit = {
     checkStrs()
+    recordStrSize(cs)
     strsBuffer(strsPointer) = cs
     strsPointer += 1
   }
+
+  private[this] final def recordStrSize(cs: CharSequence): Unit =
+    bufferedStrsSize += cs.length
 
   private[this] final def checkStrs(): Unit = {
     if (strsPointer >= strsBuffer.length) {
