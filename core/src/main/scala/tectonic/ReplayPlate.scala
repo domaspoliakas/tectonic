@@ -120,7 +120,7 @@ final class ReplayPlate private (
   final def finishRow(): Unit = appendTag(FinishRow)
 
   final def finishBatch(terminal: Boolean): Option[EventCursor] = {
-    if (terminal) {
+    if (terminal)
       Some(
         EventCursor(
           tagBuffer,
@@ -130,7 +130,7 @@ final class ReplayPlate private (
           strsPointer,
           intsBuffer,
           intsPointer))
-    } else
+    else
       None
   }
 
