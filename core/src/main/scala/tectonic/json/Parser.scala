@@ -576,7 +576,8 @@ final class Parser[F[_], A] private (
       }
       c = byte(j) & 0xff
     }
-    val s = checkForAbbrev(if (key) plate.nestMap(cbuilder.makeString) else plate.str(cbuilder.makeString))
+    val s = checkForAbbrev(
+      if (key) plate.nestMap(cbuilder.makeString) else plate.str(cbuilder.makeString))
     this.curr = j + 1
     s ne SkipColumn
   }
