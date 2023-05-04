@@ -159,6 +159,9 @@ final class Parser[F[_], A] private (
   // private[this] final val Terminate = Signal.Terminate
   private[this] final val BreakBatch = Signal.BreakBatch
 
+  // Shared builder used to construct strings that require unescaping
+  private[this] val cbuilder: CharBuilder = new CharBuilder
+
   private[this] val HexChars: Array[Int] = {
     val arr = new Array[Int](128)
     var i = 0
@@ -525,25 +528,25 @@ final class Parser[F[_], A] private (
     // escapes occur, and then translating the intermediate strings in
     // one go.
 
+    cbuilder.reset()
     var j = i + 1
-    val sb = new CharBuilder
 
     var c: Int = byte(j) & 0xff
     while (c != 34) { // "
       if (c == 92) { // \
         (byte(j + 1): @switch) match {
-          case 98 => { sb.append('\b'); j += 2 }
-          case 102 => { sb.append('\f'); j += 2 }
-          case 110 => { sb.append('\n'); j += 2 }
-          case 114 => { sb.append('\r'); j += 2 }
-          case 116 => { sb.append('\t'); j += 2 }
+          case 98 => { cbuilder.append('\b'); j += 2 }
+          case 102 => { cbuilder.append('\f'); j += 2 }
+          case 110 => { cbuilder.append('\n'); j += 2 }
+          case 114 => { cbuilder.append('\r'); j += 2 }
+          case 116 => { cbuilder.append('\t'); j += 2 }
 
-          case 34 => { sb.append('"'); j += 2 }
-          case 47 => { sb.append('/'); j += 2 }
-          case 92 => { sb.append('\\'); j += 2 }
+          case 34 => { cbuilder.append('"'); j += 2 }
+          case 47 => { cbuilder.append('/'); j += 2 }
+          case 92 => { cbuilder.append('\\'); j += 2 }
 
           // if there's a problem then descape will explode
-          case 117 => { sb.append(descape(at(j + 2, j + 6))); j += 6 }
+          case 117 => { cbuilder.append(descape(at(j + 2, j + 6))); j += 6 }
 
           case c => die(j, s"invalid escape sequence (\\${c.toChar})")
         }
@@ -554,26 +557,26 @@ final class Parser[F[_], A] private (
           die(j, s"control char ($c) in string")
       } else if (c < 128) {
         // 1-byte UTF-8 sequence
-        sb.append(c.toChar)
+        cbuilder.append(c.toChar)
         j += 1
       } else if ((c & 224) == 192) {
         // 2-byte UTF-8 sequence
-        sb.extend(at(j, j + 2))
+        cbuilder.extend(at(j, j + 2))
         j += 2
       } else if ((c & 240) == 224) {
         // 3-byte UTF-8 sequence
-        sb.extend(at(j, j + 3))
+        cbuilder.extend(at(j, j + 3))
         j += 3
       } else if ((c & 248) == 240) {
         // 4-byte UTF-8 sequence
-        sb.extend(at(j, j + 4))
+        cbuilder.extend(at(j, j + 4))
         j += 4
       } else {
         die(j, "invalid UTF-8 encoding")
       }
       c = byte(j) & 0xff
     }
-    val s = checkForAbbrev(if (key) plate.nestMap(sb.makeString) else plate.str(sb.makeString))
+    val s = checkForAbbrev(if (key) plate.nestMap(cbuilder.makeString) else plate.str(cbuilder.makeString))
     this.curr = j + 1
     s ne SkipColumn
   }
