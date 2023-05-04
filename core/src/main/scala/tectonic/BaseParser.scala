@@ -137,10 +137,7 @@ abstract class BaseParser[F[_], A](resetSize: Int) {
    */
   protected[this] final def at(i: Int, k: Int): CharSequence = {
     if (k > len) throw AsyncException
-    val size = k - i
-    val arr = new Array[Byte](size)
-    System.arraycopy(data, i, arr, 0, size)
-    new String(arr, BaseParser.Utf8)
+    new String(data, i, k - i, BaseParser.Utf8)
   }
 
   // the basic idea is that we don't signal EOF until done is true, which means

@@ -52,9 +52,9 @@ package util
 private[tectonic] final class CharBuilder {
   @inline final def INITIALSIZE = 32
 
-  private var cs = new Array[Char](INITIALSIZE)
-  private var capacity = INITIALSIZE
-  private var len = 0
+  private[this] var cs = new Array[Char](INITIALSIZE)
+  private[this] var capacity = INITIALSIZE
+  private[this] var len = 0
 
   def reset(): CharBuilder = {
     len = 0
