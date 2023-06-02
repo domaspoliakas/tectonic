@@ -65,6 +65,9 @@ package object util {
    * This method will throw an `InvalidLong` exception on invalid input.
    */
   def parseLong(cs: CharSequence): Long = {
+    if (cs.isEmpty) {
+      throw InvalidLong("Empty string")
+    }
 
     // we store the inverse of the positive sum, to ensure we don't
     // incorrectly overflow on Long.MinValue. for positive numbers
