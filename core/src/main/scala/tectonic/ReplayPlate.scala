@@ -145,11 +145,19 @@ final class ReplayPlate private (
   final def appendBatchBoundary(): Unit =
     appendTag(EndBatch)
 
-  final def tagBufferLength(): Int = tagBuffer.length
-  final def strsBufferLength(): Int = strsBuffer.length
-  final def intsBufferLength(): Int = intsBuffer.length
+  /**
+   * Returns an estimate, in bytes, of the memory usage of the accumulated events.
+   *
+   * This value will not be, and is not intended to be, precise. It will be a lower bound on,
+   * and the same order of magnitude as, actual memory usage.
+   */
+  final def residentMemoryEstimate: Long =
+    (bufferedStrsSize * 3L) + // UTF-8 average of 3-bytes per char
+      (tagBuffer.length * 8L) + // sizeOf(Long)
+      (strsBuffer.length * (8L + 4L)) + // 8b for pointer, 4b for charseq array size
+      (intsBuffer.length * 4L) // sizeOf(Int)
 
-  final def strsBufferSize(): Long = bufferedStrsSize
+  ////
 
   private[this] final def appendTag(tag: Int): Unit = {
     checkTags()
