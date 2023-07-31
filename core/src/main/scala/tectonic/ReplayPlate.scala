@@ -21,10 +21,7 @@ import cats.effect.Sync
 /**
  * Produces None until finishBatch(true) is called.
  */
-final class ReplayPlate private (
-    limit: Int, // never grow the tag buffer size beyond this point
-    retainSkips: Boolean)
-    extends Plate[Option[EventCursor]] {
+final class ReplayPlate private (retainSkips: Boolean) extends Plate[Option[EventCursor]] {
 
   // everything fits into a word
   private[this] final val Nul = EventCursor.Nul
@@ -173,11 +170,7 @@ final class ReplayPlate private (
 
   private[this] final def checkTags(): Unit = {
     if (tagSubShift == 0 && tagPointer >= tagBuffer.length) {
-      if (tagBuffer.length * 2 > limit) {
-        throw new IllegalStateException(s"unable to grow EventCursor beyond $limit")
-      }
-
-      val tagBuffer2 = new Array[Long](tagBuffer.length * 2)
+      val tagBuffer2 = new Array[Long](nextBufferSize(tagBuffer.length))
       System.arraycopy(tagBuffer, 0, tagBuffer2, 0, tagBuffer.length)
       tagBuffer = tagBuffer2
     }
@@ -195,11 +188,7 @@ final class ReplayPlate private (
 
   private[this] final def checkStrs(): Unit = {
     if (strsPointer >= strsBuffer.length) {
-      if (strsBuffer.length * 2 > limit) {
-        throw new IllegalStateException(s"unable to grow EventCursor beyond $limit")
-      }
-
-      val strsBuffer2 = new Array[CharSequence](strsBuffer.length * 2)
+      val strsBuffer2 = new Array[CharSequence](nextBufferSize(strsBuffer.length))
       System.arraycopy(strsBuffer, 0, strsBuffer2, 0, strsBuffer.length)
       strsBuffer = strsBuffer2
     }
@@ -213,15 +202,19 @@ final class ReplayPlate private (
 
   private[this] final def checkInts(): Unit = {
     if (intsPointer >= intsBuffer.length) {
-      if (intsBuffer.length * 2 > limit) {
-        throw new IllegalStateException(s"unable to grow EventCursor beyond $limit")
-      }
-
-      val intsBuffer2 = new Array[Int](intsBuffer.length * 2)
+      val intsBuffer2 = new Array[Int](nextBufferSize(intsBuffer.length))
       System.arraycopy(intsBuffer, 0, intsBuffer2, 0, intsBuffer.length)
       intsBuffer = intsBuffer2
     }
   }
+
+  private[this] final def nextBufferSize(current: Int): Int =
+    if (current == Int.MaxValue)
+      throw new IllegalStateException(s"Unable to grow EventCursor beyond ${Int.MaxValue}")
+    else if (current > (Int.MaxValue / 2))
+      Int.MaxValue
+    else
+      current * 2
 }
 
 object ReplayPlate {
@@ -229,6 +222,6 @@ object ReplayPlate {
   // generally it just makes us much more efficient in the singleton cartesian case, and not much less efficient in the massive case
   val DefaultBufferSize: Int = 32
 
-  def apply[F[_]: Sync](limit: Int, retainSkips: Boolean): F[ReplayPlate] =
-    Sync[F].delay(new ReplayPlate(limit, retainSkips))
+  def apply[F[_]: Sync](retainSkips: Boolean): F[ReplayPlate] =
+    Sync[F].delay(new ReplayPlate(retainSkips))
 }
