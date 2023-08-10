@@ -30,7 +30,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
 
   "ReplayPlate" should {
     "round-trip events" in prop { (driver: ∀[λ[α => Plate[α] => Unit]]) =>
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
       driver[Option[EventCursor]](plate)
 
       val streamOpt = plate.finishBatch(true)
@@ -56,7 +56,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
       (driver1: ∀[λ[α => Plate[α] => Unit]], drivers0: List[∀[λ[α => Plate[α] => Unit]]]) =>
         // emulating nonemptylist
         val drivers = driver1 :: drivers0
-        val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+        val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
 
         // we use init/last to avoid puttting batch boundaries at the end
         drivers.init foreach { driver =>
@@ -98,7 +98,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     }.set(minTestsOk = 10000, workers = Runtime.getRuntime.availableProcessors())
 
     "implement a trivial batch boundary" in {
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
       plate.str("hi")
       plate.appendBatchBoundary()
       plate.num("42", -1, -1)
@@ -123,7 +123,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     "indicate end of batch when row is terminated at boundary" in {
       import EventCursor.NextRowStatus.NextRowAndBatch
 
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
       plate.str("hi")
       plate.finishRow()
       plate.appendBatchBoundary()
@@ -147,7 +147,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     }
 
     "reset to the start of the batch" in {
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
       plate.str("hi")
       plate.appendBatchBoundary()
       plate.num("42", -1, -1)
@@ -170,7 +170,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     }
 
     "realign marks to the start of the batch" in {
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
       plate.str("hi")
       plate.finishRow()
       plate.str("there")
@@ -202,7 +202,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     }
 
     "only produce one row at a time" in {
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
       plate.str("first")
       plate.finishRow()
       plate.str("second")
@@ -230,7 +230,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     }
 
     "mark and rewind at arbitrary points" in {
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
       plate.str("first")
       plate.finishRow()
       plate.str("second")
@@ -285,7 +285,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     }
 
     "measure distance during rewind" in {
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
 
       plate.str("first")
       plate.finishRow()
@@ -322,7 +322,7 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
     }
 
     "correctly grow the buffers" in {
-      val plate = ReplayPlate[IO](52428800, true).unsafeRunSync()
+      val plate = ReplayPlate[IO](retainSkips = true).unsafeRunSync()
 
       (0 until 131072 + 1) foreach { _ => plate.nul() }
 
@@ -358,14 +358,6 @@ class ReplayPlateSpecs extends Specification with ScalaCheck {
       cursor.drive(sink)
 
       counter mustEqual (131072 + 1)
-    }
-
-    "produce an error when attempting to grow beyond bounds" in {
-      val plate = ReplayPlate[IO](8200, true).unsafeRunSync()
-
-      {
-        (0 until 131072 + 1) foreach { _ => plate.nul() }
-      } must throwAn[IllegalStateException]
     }
   }
 
