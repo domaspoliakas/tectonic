@@ -1,6 +1,6 @@
 import scala.collection.Seq
 
-ThisBuild / scalaVersion := "2.13.8"
+ThisBuild / scalaVersion := "2.13.11"
 
 ThisBuild / githubRepository := "tectonic"
 
@@ -9,11 +9,11 @@ ThisBuild / homepage := Some(url("https://github.com/precog/tectonic"))
 ThisBuild / scmInfo := Some(
   ScmInfo(url("https://github.com/precog/tectonic"), "scm:git@github.com:precog/tectonic.git"))
 
-val CatsEffectVersion = "3.4.6"
+val CatsEffectVersion = "3.4.7"
 val Fs2Version = "3.6.1"
 val JawnFs2Version = "2.4.0"
 val ScalacheckVersion = "1.17.0"
-val Specs2Version = "4.19.2"
+val Specs2Version = "4.20.2"
 
 // Include to also publish a project's tests
 lazy val publishTestsSettings = Seq(Test / packageBin / publishArtifact := true)
