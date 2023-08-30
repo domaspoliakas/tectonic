@@ -237,6 +237,32 @@ class ParserSpecs extends Specification {
     "allow row delimiter sequence in quoted record" in {
       "a\r\n\"fu\r\nbar\"\r\n" must parseAs(NestMap("a"), Str("fu\r\nbar"), Unnest, FinishRow)
     }
+
+    "ignore empty lines" in {
+      "one,two\r\n\r\n\r\n1,2\r\n3,4\r\n\r\n5,6" must parseAs(
+        NestMap("one"),
+        Str("1"),
+        Unnest,
+        NestMap("two"),
+        Str("2"),
+        Unnest,
+        FinishRow,
+        NestMap("one"),
+        Str("3"),
+        Unnest,
+        NestMap("two"),
+        Str("4"),
+        Unnest,
+        FinishRow,
+        NestMap("one"),
+        Str("5"),
+        Unnest,
+        NestMap("two"),
+        Str("6"),
+        Unnest,
+        FinishRow
+      )
+    }
   }
 
   "excel-style with unix newlines" should {
@@ -244,6 +270,32 @@ class ParserSpecs extends Specification {
 
     "parse a single value" in {
       "abc\nfubar\n" must parseAs(NestMap("abc"), Str("fubar"), Unnest, FinishRow)
+    }
+
+    "ignore empty lines" in {
+      "one,two\n\n\n1,2\n3,4\n\n5,6" must parseAs(
+        NestMap("one"),
+        Str("1"),
+        Unnest,
+        NestMap("two"),
+        Str("2"),
+        Unnest,
+        FinishRow,
+        NestMap("one"),
+        Str("3"),
+        Unnest,
+        NestMap("two"),
+        Str("4"),
+        Unnest,
+        FinishRow,
+        NestMap("one"),
+        Str("5"),
+        Unnest,
+        NestMap("two"),
+        Str("6"),
+        Unnest,
+        FinishRow
+      )
     }
 
     "parse three values across three columns" in {
