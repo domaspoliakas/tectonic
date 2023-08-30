@@ -313,6 +313,9 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config, resetSize: I
               plate.finishRow()
 
               parse(RECORD, i + 1, 0)
+            } else if (column == 0) {
+              // empty row, just continue
+              parse(RECORD, i + 1, 0)
             } else {
               die(i, "unexpected end of row: missing records")
             }
@@ -332,6 +335,9 @@ final class Parser[F[_], A](plate: Plate[A], config: Parser.Config, resetSize: I
               plate.unnest()
               plate.finishRow()
 
+              parse(RECORD, i + 2, 0)
+            } else if (column == 0) {
+              // empty row, just continue
               parse(RECORD, i + 2, 0)
             } else {
               die(i, "unexpected end of row: missing records")
