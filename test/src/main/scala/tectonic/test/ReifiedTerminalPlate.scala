@@ -105,6 +105,9 @@ object ReifiedTerminalPlate {
   def apply[F[_]: Sync](accumToTerminal: Boolean = true): F[Plate[List[Event]]] =
     Sync[F].delay(new ReifiedTerminalPlate(accumToTerminal))
 
+  /**
+   * Drive `plate` with `events`, ignoring all signals from the plate.
+   */
   def visit[F[_]: Sync, A](
       events: List[Event],
       plate: Plate[A],
@@ -126,5 +129,98 @@ object ReifiedTerminalPlate {
     }
 
     plate.finishBatch(terminus)
+  }
+
+  /**
+   * Drive `plate` with `events`, handling signals from the plate.
+   */
+  def visitHandlingSignals[F[_]: Sync, A](
+      events: List[Event],
+      plate: Plate[A],
+      terminus: Boolean = true): F[List[A]] = Sync[F] delay {
+
+    var signal: Signal = null
+    var skippingRow: Boolean = false
+    var skippingColumn: Int = -1
+    val out = mutable.ListBuffer.empty[A]
+
+    val evs = events.toArray
+    var i = 0
+
+    while (i < evs.length) {
+      val ev = evs(i)
+
+      if (skippingRow) {
+        if (ev == Event.FinishRow) {
+          skippingRow = false
+          plate.finishRow()
+        }
+      } else if (skippingColumn >= 0) {
+        ev match {
+          case Event.NestMap(_) | Event.NestArr =>
+            skippingColumn += 1
+
+          case Event.Unnest if skippingColumn == 0 =>
+            skippingColumn = -1
+            signal = plate.unnest()
+
+          case Event.Unnest =>
+            skippingColumn -= 1
+
+          case _ =>
+        }
+      } else {
+        signal = ev match {
+          case Event.Nul => plate.nul()
+          case Event.Fls => plate.fls()
+          case Event.Tru => plate.tru()
+          case Event.Map => plate.map()
+          case Event.Arr => plate.arr()
+          case Event.Num(s, decIdx, expIdx) => plate.num(s, decIdx, expIdx)
+          case Event.Str(s) => plate.str(s)
+          case Event.NestMeta(path) => plate.nestMeta(path)
+          case Event.Unnest => plate.unnest()
+
+          case Event.NestMap(path) =>
+            val s = plate.nestMap(path)
+            if (s == Signal.SkipColumn) {
+              skippingColumn = 0
+              null
+            } else {
+              s
+            }
+
+          case Event.NestArr =>
+            val s = plate.nestArr()
+            if (s == Signal.SkipColumn) {
+              skippingColumn = 0
+              null
+            } else {
+              s
+            }
+
+          case Event.FinishRow =>
+            plate.finishRow()
+            null
+
+          case Event.Skipped(bytes) =>
+            plate.skipped(bytes)
+            null
+        }
+      }
+
+      if (signal == Signal.BreakBatch) {
+        out += plate.finishBatch(false)
+      }
+
+      skippingRow ||= (signal == Signal.SkipRow)
+
+      signal = null
+      i += 1
+    }
+
+    out += plate.finishBatch(terminus)
+
+    out.toList
   }
 }
