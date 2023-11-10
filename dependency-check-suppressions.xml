@@ -53,4 +53,12 @@
        <packageUrl regex="true">^pkg:maven/com\.google\.guava/guava@.*$</packageUrl>
        <cve>CVE-2023-2976</cve>
     </suppress>
+    <suppress>
+       <notes><![CDATA[
+       file name: test-interface-1.0.jar
+       false positive related to sbt-io
+       ]]></notes>
+       <packageUrl regex="true">^pkg:maven/org\.scala\-sbt/test\-interface@.*$</packageUrl>
+       <cve>CVE-2023-46122</cve>
+    </suppress>
 </suppressions>
