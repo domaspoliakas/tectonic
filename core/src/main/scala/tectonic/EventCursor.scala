@@ -53,6 +53,9 @@ final class EventCursor private (
   private[this] final val NextBatch = EventCursor.NextRowStatus.NextBatch
   private[this] final val NextRowAndBatch = EventCursor.NextRowStatus.NextRowAndBatch
 
+  private[this] final val FinishRow = EventCursor.FinishRow
+  private[this] final val EndBatch = EventCursor.EndBatch
+
   def drive(plate: Plate[_]): Unit = {
     if (tagLimit > 0 || tagSubShiftLimit > 0) {
       var b: EventCursor.NextRowStatus = NextRow
@@ -98,7 +101,7 @@ final class EventCursor private (
           continue = false
 
           // if we hit a row boundary, look ahead to see if we're also at a batch boundary
-          if (this.hasNext() && currentTag() == 0xd) {
+          if (this.hasNext() && currentTag() == EndBatch) {
             // if we're at the batch boundary, advance over it
             nextTag()
             hasNext = false
@@ -148,8 +151,71 @@ final class EventCursor private (
     }
   }
 
+  /**
+   * The number of events remaining in the cursor.
+   */
   def length: Int =
     (tagLimit * (64 / 4) + (tagSubShiftLimit / 4)) - (tagOffset * (64 / 4) + (tagSubShiftOffset / 4))
+
+  /**
+   * Returns whether the current batch is empty.
+   *
+   * "empty" is semantic and not necessarily physical in that the batch may contain more events,
+   * but they will all be control/meta events like `FinishRow` or `EndBatch`.
+   */
+  def batchEmpty: Boolean = {
+    val t = currentTag()
+    (t == EndBatch) || ((t == FinishRow) && (!hasNext() || (peekTag() == EndBatch)))
+  }
+
+  /**
+   * Advance to the start of the next batch or end of the cursor.
+   */
+  def skipBatch(): EventCursor.NextRowStatus = {
+    var continue = true
+    var hasNext = this.hasNext()
+
+    while (hasNext) {
+      continue = true
+
+      (nextTag(): @switch) match {
+        case 0x5 => // num
+          strsCursor += 1
+          intsCursor += 2
+        case 0x6 => // str
+          strsCursor += 1
+        case 0x7 => // nestMap
+          strsCursor += 1
+        case 0x9 => // nestMeta
+          strsCursor += 1
+        case 0xb => // finishRow
+          continue = false
+
+          // if we hit a row boundary, look ahead to see if we're also at a batch boundary
+          if (this.hasNext() && currentTag() == EndBatch) {
+            // if we're at the batch boundary, advance over it
+            nextTag()
+            hasNext = false
+          }
+        case 0xc => // skipped
+          intsCursor += 1
+        case 0xd => // endBatch
+          hasNext = false
+        case _ =>
+      }
+
+      hasNext = hasNext && this.hasNext()
+    }
+
+    if (!continue && hasNext)
+      NextRow
+    else if (continue && !hasNext)
+      NextBatch
+    else if (!continue && !hasNext)
+      NextRowAndBatch
+    else
+      throw new AssertionError
+  }
 
   /**
    * Marks the cursor location for subsequent rewinding. Overwrites any previous mark.
@@ -183,6 +249,9 @@ final class EventCursor private (
   private[this] final def currentTag(): Int =
     ((tagBuffer(tagCursor) >>> tagSubShiftCursor) & 0xf).toInt
 
+  /**
+   * Returns the current tag and advances to the next one.
+   */
   private[this] final def nextTag(): Int = {
     val back = currentTag()
 
@@ -207,6 +276,16 @@ final class EventCursor private (
     intsCursor += 1
     back
   }
+
+  /**
+   * Returns the next tag without advancing the cursor.
+   */
+  private[this] final def peekTag(): Int =
+    if (tagSubShiftCursor == 60) {
+      (tagBuffer(tagCursor + 1) & 0xf).toInt
+    } else {
+      ((tagBuffer(tagCursor) >>> (tagSubShiftCursor + 4)) & 0xf).toInt
+    }
 
   def reset(): Unit = {
     tagCursor = tagCursorBatchStart
